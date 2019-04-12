@@ -98,7 +98,17 @@ class Notes(Page):
         for e in static_libs :
             self.register_static(e)
 
-    def add_note(self, title, body, img_src=None) :
+    def add_note(self, title, body, img_src=None, add_line=True) :
+
+        if add_line :
+            import traceback
+            try:
+                raise TypeError("Oups!")
+            except Exception as err:
+                line_data = "<div class='uk-text-meta'>{filename}: {line}</div>".format(filename=traceback.extract_stack()[0].filename, line=traceback.extract_stack()[0].lineno)
+        else :
+            line_data = ""
+
         if img_src :    
             img = """
             <div class="uk-card-media-bottom">
@@ -112,14 +122,25 @@ class Notes(Page):
         <div class="uk-card uk-card-default">
             <div class="uk-card-body">
                 <h3 class="uk-card-title">{title}</h3>
+                {line}
                 <p>{body}</p>
             </div>
             {img}
         </div>
-        """.format(title=title, body=body, img=img)
+        """.format(line=line_data, title=title, body=body, img=img)
         self.notes_html.append(html)
 
-    def add_bullet_points_note(self, title, points, img_src=None) :
+    def add_bullet_points_note(self, title, points, img_src=None, add_line=True) :
+        
+        if add_line :
+            import traceback
+            try:
+                raise TypeError("Oups!")
+            except Exception as err:
+                line_data = "<div class='uk-text-meta'>{filename}: {line}</div>".format(filename=traceback.extract_stack()[0].filename, line=traceback.extract_stack()[0].lineno)
+        else :
+            line_data = ""
+
         
         if img_src :    
             img = """
@@ -136,11 +157,12 @@ class Notes(Page):
         <div class="uk-card uk-card-default">
             <div class="uk-card-body">
                 <h3 class="uk-card-title">{title}</h3>
+                {line}
                 <ul class="uk-list uk-list-bullet">{lis}</ul>
             </div>
             {img}
         </div>
-        """.format(title=title, lis=lis, img=img)
+        """.format(line=line_data, title=title, lis=lis, img=img)
         self.notes_html.append(html)
 
     def get_html(self) :
