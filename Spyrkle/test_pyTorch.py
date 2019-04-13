@@ -1,4 +1,6 @@
 import notebook
+import numpy
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -46,10 +48,21 @@ optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
 
 def get_children(module) :
-    return module.children()
+    return module.modules()
 
 def get_name(module) :
     return module.__class__.__name__
+
+inputs = torch.FloatTensor( numpy.random.random((6, 3, 32, 32)) )
+
+trace = torch.jit.get_trace_graph(model, inputs)[0]
+print(trace)
+print("------------")
+from torch.onnx import utils
+# opt_trace = utils._optimize_graph(trace.graph(), None)
+# opt_trace = torch.onnx._optimize_trace(trace, False)
+print(trace.graph())
+
 
 dag = notebook.DagreDAG(BOOK, "Network")
 dag.derive(model, get_children, get_name)
@@ -59,4 +72,4 @@ print(dag.edges)
 
 # print(model.modules())
 
-BOOK.save()
+# BOOK.save()
