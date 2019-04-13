@@ -178,7 +178,9 @@ class DAG(Page):
     """docstring for DAG"""
     def __init__(self, notebook, name):
         super(DAG, self).__init__(notebook, name)
-        self.name = name
+        self._init()
+
+    def _init(self) :
         self.nodes, self.edges = set(), set()
         self.node_attributes = {}
 
@@ -186,13 +188,33 @@ class DAG(Page):
         self.nodes = set(nodes)
         self.edges = set(edges)
 
-    def derive(self, root, get_descendents_fct, get_name_fct, get_attributes_fcts = None) :
-        def _derive(root, nodes, edges) :
-            nodes.add(get_name_fct(root))
-            
-            for attr_name, fct in get_attributes_fcts :
-                self.node_attributes[attr_name] = fct(root)
+    def derive(self, root, get_children_fct, get_name_fct, get_attributes_fcts = None, autoincrement_names=True) :
+        def _resolve_name(base_name, autoinc) :
+            if not autoinc :
+                return base_name
 
-            for d in get_descendents_fct(root) :
-                edges.add((get_name_fct(root), get_name_fct(d)))
-                _derive(d, nodes, edges)
+            name = base_name
+            i = 1
+            while name in self.nodes :
+                name = base_name + "_%d" % i 
+                i += 1
+
+            return name
+
+        def _derive(root, nodes, edges, node_attributes) :
+            root_name = _resolve_name(get_name_fct(root), autoincrement_names)
+            nodes.add( root_name )
+            
+            if get_attributes_fcts :
+                for attr_name, fct in get_attributes_fcts :
+                    node_attributes[attr_name] = fct(root)
+
+            for d in get_children_fct(root) :
+                if d is not root :
+                    d_name = _resolve_name(get_name_fct(d), autoincrement_names)
+                    edges.add((root_name, d_name))
+                    _derive(d, nodes, edges, node_attributes)
+
+        self._init()
+        _derive(root, self.nodes, self.edges, self.node_attributes)
+
