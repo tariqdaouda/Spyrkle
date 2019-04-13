@@ -11,6 +11,15 @@ class TheModelClass(nn.Module):
         global BOOK
         notes = notebook.Notes(BOOK, "Model")
         notes.add_note("Description", "This model comes from this page: https://pytorch.org/tutorials/beginner/saving_loading_models.html")
+        notes.add_note(
+            "Code",
+            "These are the first layers",
+            code = """
+                self.conv1 = nn.Conv2d(3, 6, 5)
+                self.pool = nn.MaxPool2d(2, 2)
+                self.conv2 = nn.Conv2d(6, 16, 5)
+            """
+        )
 
         super(TheModelClass, self).__init__()
         self.conv1 = nn.Conv2d(3, 6, 5)
@@ -42,7 +51,7 @@ def get_children(module) :
 def get_name(module) :
     return module.__class__.__name__
 
-dag = notebook.DAG(BOOK, "Network")
+dag = notebook.DagreDAG(BOOK, "Network")
 dag.derive(model, get_children, get_name)
 
 print(dag.nodes)
@@ -50,4 +59,4 @@ print(dag.edges)
 
 # print(model.modules())
 
-# BOOK.save()
+BOOK.save()

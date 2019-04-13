@@ -63,10 +63,10 @@ class Notebook(object):
         f.write(self.get_html())
         f.close()
 
-class Page(object):
+class Abstract_Page(object):
     """docstring for Page"""
     def __init__(self, notebook, name):
-        super(Page, self).__init__()
+        super(Abstract_Page, self).__init__()
         self.notebook = notebook
         self.name = name
         self.static_urls = set()
@@ -81,9 +81,9 @@ class Page(object):
         self.lib_urls.add(url)
 
     def get_html(self) :
-        pass
+        raise NotImplemented("Must be impleemented in child")
 
-class Notes(Page):
+class Notes(Abstract_Page):
     """docstring for Notes"""
     def __init__(self, notebook, name):
         super(Notes, self).__init__(notebook, name)
@@ -98,9 +98,9 @@ class Notes(Page):
         for e in static_libs :
             self.register_static(e)
 
-    def add_note(self, title, body, img_src=None, add_line=True) :
+    def add_note(self, title, body, img_src=None, code=None, add_line_reference=True) :
 
-        if add_line :
+        if add_line_reference :
             import traceback
             try:
                 raise TypeError("Oups!")
@@ -118,6 +118,11 @@ class Notes(Page):
         else :
             img = ""
 
+        if code :
+            code = "<pre>%s</pre>" % code
+        else :
+            code = ""
+
         html = """
         <div class="uk-card uk-card-default">
             <div class="uk-card-body">
@@ -125,14 +130,15 @@ class Notes(Page):
                 {line}
                 <p>{body}</p>
             </div>
+            {code}
             {img}
         </div>
-        """.format(line=line_data, title=title, body=body, img=img)
+        """.format(line=line_data, title=title, body=body, code=code, img=img)
         self.notes_html.append(html)
 
-    def add_bullet_points_note(self, title, points, img_src=None, add_line=True) :
+    def add_bullet_points_note(self, title, points, img_src=None, add_line_reference=True) :
         
-        if add_line :
+        if add_line_reference :
             import traceback
             try:
                 raise TypeError("Oups!")
@@ -167,56 +173,170 @@ class Notes(Page):
 
     def get_html(self) :
         html=""""
-        <div class="uk-child-width-1-4@m uk-child-width-1-2@s" uk-grid="masonry: true">
+        <div class="uk-child-width-1-3@m uk-child-width-1-2@s" uk-grid="masonry: true">
         {notes}
         </div>
         """.format(notes = "\n".join(self.notes_html))
 
         return html
 
-class DAG(Page):
+class Abstract_DAG(Abstract_Page):
     """docstring for DAG"""
     def __init__(self, notebook, name):
-        super(DAG, self).__init__(notebook, name)
+        super(Abstract_DAG, self).__init__(notebook, name)
         self._init()
 
     def _init(self) :
         self.nodes, self.edges = {}, set()
-        self.node_attributes = {}
+        self.node_labels = set()
+        # self.node_attributes = {}
 
     def set(self, nodes, edges) :
+        self._init()
+        for n in self.nodes :
+            self.node_labels.add(d)
+
         self.nodes = nodes
         self.edges = set(edges)
 
-    def derive(self, root, get_children_fct, get_name_fct, get_attributes_fcts = None, autoincrement_names=True) :
-        def _resolve_name(base_name, autoinc) :
+    def derive(self, root, get_children_fct, get_name_fct, get_attributes_fcts = None, autoincrement_names=True, reset=False) :
+        def _resolve_name(base_name, node_labels, autoinc) :
             if not autoinc :
                 return base_name
 
             name = base_name
             i = 1
-            while name in self.nodes.values() :
+            while name in self.node_labels :
                 name = base_name + "_%d" % i 
                 i += 1
 
             return name
 
-        def _derive(root, nodes, edges, node_attributes) :
-            root_name = _resolve_name(get_name_fct(root), autoincrement_names)
+        def _derive(root, nodes, edges, node_labels) :
+            root_name = _resolve_name(get_name_fct(root), node_labels, autoincrement_names)
+            node_labels.add(root_name)
             nodes[id(root)] = {
                 "label": root_name
             }
 
             if get_attributes_fcts :
                 for attr_name, fct in get_attributes_fcts :
-                    node_attributes[attr_name] = fct(root)
+                    nodes[id(root)] = fct(root)
 
             for d in get_children_fct(root) :
                 if d is not root :
                     edges.add((id(root), id(d)))
-                    _derive(d, nodes, edges, node_attributes)
+                    _derive(d, nodes, edges, node_labels)
 
-        self._init()
-        _derive(root, self.nodes, self.edges, self.node_attributes)
+        if reset :
+            self._init()
+        _derive(root, self.nodes, self.edges, self.node_labels)
 
-    
+class DagreDAG(Abstract_DAG) :
+    """"""
+
+    def __init__(self, notebook, name):
+        super(DagreDAG, self).__init__(notebook, name)
+        self.canvas_height = 600
+        self.canvas_width = 960
+        self.reset_css()
+
+    def reset_css(self) :
+        self.css_rules = {}
+        self.css_rules["text"] = (
+            "font-weight: 300",
+            'font-family: "Helvetica Neue", Helvetica, Arial, sans-serif',
+            'font-size: 14px'
+        )
+
+        self.css_rules[".node rect"] = (
+            "stroke: #999",
+            'fill: #fff',
+            'stroke-width: 1.5px'
+        )
+
+        self.css_rules[".edgePath path"] = (
+            "stroke: #333",
+            'stroke-width: 1.5px'
+        )
+
+        self.css_rules["svg"] = (
+          'border: 1px solid',
+          'overflow: hidden',
+          'margin: 0 auto',
+        )
+
+    def clear_css(self) :
+        self.css_rules = {}
+
+    def set_css_rule(self, name, values) :
+        self.css_rules["name"] = ';\n'.join(values)
+
+    def set_canvas(self, height, width) :
+        self.canvas_height = height
+        self.canvas_width = width      
+
+    def get_html(self) :
+        def _set_nodes() :
+            res = []
+            for node_id, attributes in self.nodes.items() :
+                attrs = []
+                for k, v in attributes.items() :
+                    attrs.append("%s: '%s'" % (k, v))
+                res.append( "g.setNode({node_id}, {{ {attributes} }});".format(node_id = node_id, attributes = '.'.join(attrs) ))
+            
+            return '\n'.join(res)
+
+        def _set_edges() :
+            res = []
+            for n1, n2 in self.edges :
+                res.append( "g.setEdge(%s, %s)" % (n1, n2) ) ;
+            return '\n'.join(res)
+
+        def _set_css() :
+            res = []
+            for n, rules in self.css_rules.items() :
+                str_rules = '; '.join(rules)
+                res.append( "%s {%s} " % (n, str_rules) ) ;           
+            return '\n'.join(res)
+
+        template = """"
+        <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
+        <script src="https://dagrejs.github.io/project/dagre-d3/latest/dagre-d3.min.js"></script>
+        
+        <style id="css">
+            {css}
+        </style>
+        <svg id="svg-canvas" width={canvas_width} height={canvas_height}></svg>
+        <script id="js">
+            // Create the input graph
+            var g = new dagreD3.graphlib.Graph()
+              .setGraph({{}})
+              .setDefaultEdgeLabel(function() {{ return {{}}; }});
+
+            {nodes}
+            g.nodes().forEach(function(v) {{
+              var node = g.node(v);
+              // Round the corners of the nodes
+              node.rx = node.ry = 5;
+            }});
+
+            {edges}
+            // Create the renderer
+            var render = new dagreD3.render();
+
+            // Set up an SVG group so that we can translate the final graph.
+            var svg = d3.select("svg"),
+                svgGroup = svg.append("g");
+
+            // Run the renderer. This is what draws the final graph.
+            render(d3.select("svg g"), g);
+
+            // Center the graph
+            var xCenterOffset = (svg.attr("width") - g.graph().width) / 2;
+            svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");
+            svg.attr("height", g.graph().height + 40);
+        </script>""".format(canvas_height=self.canvas_height, canvas_width=self.canvas_width, css = _set_css(), nodes = _set_nodes(), edges= _set_edges())
+
+        print(template)
+        return template
