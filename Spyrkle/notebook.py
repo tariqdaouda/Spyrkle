@@ -181,11 +181,11 @@ class DAG(Page):
         self._init()
 
     def _init(self) :
-        self.nodes, self.edges = set(), set()
+        self.nodes, self.edges = {}, set()
         self.node_attributes = {}
 
     def set(self, nodes, edges) :
-        self.nodes = set(nodes)
+        self.nodes = nodes
         self.edges = set(edges)
 
     def derive(self, root, get_children_fct, get_name_fct, get_attributes_fcts = None, autoincrement_names=True) :
@@ -195,7 +195,7 @@ class DAG(Page):
 
             name = base_name
             i = 1
-            while name in self.nodes :
+            while name in self.nodes.values() :
                 name = base_name + "_%d" % i 
                 i += 1
 
@@ -203,18 +203,20 @@ class DAG(Page):
 
         def _derive(root, nodes, edges, node_attributes) :
             root_name = _resolve_name(get_name_fct(root), autoincrement_names)
-            nodes.add( root_name )
-            
+            nodes[id(root)] = {
+                "label": root_name
+            }
+
             if get_attributes_fcts :
                 for attr_name, fct in get_attributes_fcts :
                     node_attributes[attr_name] = fct(root)
 
             for d in get_children_fct(root) :
                 if d is not root :
-                    d_name = _resolve_name(get_name_fct(d), autoincrement_names)
-                    edges.add((root_name, d_name))
+                    edges.add((id(root), id(d)))
                     _derive(d, nodes, edges, node_attributes)
 
         self._init()
         _derive(root, self.nodes, self.edges, self.node_attributes)
 
+    
