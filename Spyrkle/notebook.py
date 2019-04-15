@@ -191,7 +191,7 @@ class Abstract_DAG(Abstract_Page):
         self.node_labels = set()
         # self.node_attributes = {}
 
-    def set(self, nodes, edges) :
+    def force_set(self, nodes, edges) :
         self._init()
         for n in self.nodes :
             self.node_labels.add(d)
@@ -199,38 +199,49 @@ class Abstract_DAG(Abstract_Page):
         self.nodes = nodes
         self.edges = set(edges)
 
-    def derive(self, root, get_children_fct, get_name_fct, get_attributes_fcts = None, autoincrement_names=True, reset=False) :
-        def _resolve_name(base_name, node_labels, autoinc) :
-            if not autoinc :
-                return base_name
+    def parse(self, fct, *args, **kwargs) :
+        self.nodes, self.edges = fct(*args, **kwargs)
+    
+    # @classmethod
+    def resolve_node_name(self, base_name, autoinc) :
+        if not autoinc :
+            return base_name
 
-            name = base_name
-            i = 1
-            while name in self.node_labels :
-                name = base_name + "_%d" % i 
-                i += 1
+        name = base_name
+        i = 1
+        while name in self.node_labels :
+            name = base_name + "_%d" % i 
+            i += 1
 
-            return name
+        return name
+
+    def crawl(self, roots, get_next_fct, get_uid_fct, get_name_fct, parents_to_children=True, get_attributes_fcts = None, autoincrement_names=True, reset=False) :
 
         def _derive(root, nodes, edges, node_labels) :
-            root_name = _resolve_name(get_name_fct(root), node_labels, autoincrement_names)
+            root_name = self.resolve_node_name(get_name_fct(root), autoincrement_names)
             node_labels.add(root_name)
-            nodes[id(root)] = {
+            nodes[get_uid_fct(root)] = {
                 "label": root_name
             }
 
             if get_attributes_fcts :
                 for attr_name, fct in get_attributes_fcts :
-                    nodes[id(root)] = fct(root)
+                    nodes[get_uid_fct(root)] = fct(root)
 
-            for d in get_children_fct(root) :
+            for d in get_next_fct(root) :
                 if d is not root :
-                    edges.add((id(root), id(d)))
+                    if parents_to_children :
+                        edges.add( (get_uid_fct(root), get_uid_fct(d)) )
+                    else :
+                        edges.add( (get_uid_fct(d), get_uid_fct(root)) )
+                    
                     _derive(d, nodes, edges, node_labels)
 
         if reset :
             self._init()
-        _derive(root, self.nodes, self.edges, self.node_labels)
+    
+        for root in roots :
+            _derive(root, self.nodes, self.edges, self.node_labels)
 
 class DagreDAG(Abstract_DAG) :
     """"""
@@ -283,14 +294,14 @@ class DagreDAG(Abstract_DAG) :
                 attrs = []
                 for k, v in attributes.items() :
                     attrs.append("%s: '%s'" % (k, v))
-                res.append( "g.setNode({node_id}, {{ {attributes} }});".format(node_id = node_id, attributes = '.'.join(attrs) ))
+                res.append( "g.setNode('{node_id}', {{ {attributes} }});".format(node_id = node_id, attributes = '.'.join(attrs) ))
             
             return '\n'.join(res)
 
         def _set_edges() :
             res = []
             for n1, n2 in self.edges :
-                res.append( "g.setEdge(%s, %s)" % (n1, n2) ) ;
+                res.append( "g.setEdge('%s', '%s')" % (n1, n2) ) ;
             return '\n'.join(res)
 
         def _set_css() :
