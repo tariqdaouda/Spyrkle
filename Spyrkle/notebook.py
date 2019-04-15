@@ -19,44 +19,50 @@ class Notebook(object):
         for name, page in self.pages.items() :
             switch_menu.append("<li><a href='#'>%s</a></li>" % page.name)
             switch_html.append("<li>%s</li>" % page.get_html())
-
+        
         head = """<head>
             <!doctype html>
             <meta charset="utf-8">
             <!-- UIkit CSS -->
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.3/css/uikit.min.css" />
+            <link rel="stylesheet" href="../static/libs/uikit-3.0.3/css/uikit.css" />
 
             <!-- UIkit JS -->
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.3/js/uikit.min.js"></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.3/js/uikit-icons.min.js"></script>
+            <script src="../static/libs/uikit-3.0.3/js/uikit.min.js"></script>
+            <script src="../static/libs/uikit-3.0.3/js/uikit-icons.min.js"></script>
 
-            <title>Dagre D3 Demo: Tooltip on Hover</title>
-        </head>"""
+            <title>{name}</title>
+        </head>""".format(name = self.name)
         
         heading="<h1 class='uk-heading-primary'>{name}</h1>".format(name=self.name)
-        switcher='<ul class="uk-subnav uk-subnav-pill" uk-switcher>{menu}</ul>'.format(menu=''.join(switch_menu)) 
+        switcher='<ul uk-tab>{menu}</ul>'.format(menu=''.join(switch_menu)) 
         switcher_html='<ul class="uk-switcher uk-margin">{data}</ul>'.format(data=''.join(switch_html)) 
-
         body = "<body class='uk-container'>{heading}\n{switcher}\n{switcher_html}</body>".format(heading=heading, switcher=switcher, switcher_html=switcher_html)
 
         footer = "<footer><p class='uk-text-meta'>Generetad by Spyrkle, static documentation for your glorious pythonic work</p></footer>"
 
         return '\n'.join((head, body, footer))
 
-    def save(self, folder = ".") :
+    def save(self, folder = ".", overwrite = False) :
         import os
 
+        def _create_folder(folder_name):
+            try:
+                os.mkdir(new_foldername)
+            except FileExistsError as e:
+               print("Warning: Folder %s already exists" % folder_name)
+        
         foldername = os.path.join(folder, self.name)
 
         new_foldername = foldername
-        i = 1
-        while os.path.exists(new_foldername) :
-            new_foldername = foldername + "_%s" % i
-            i += 1
-        os.mkdir(new_foldername)
+        if not overwrite :
+            i = 1
+            while os.path.exists(new_foldername) :
+                new_foldername = foldername + "_%s" % i
+                i += 1
 
-        os.mkdir( os.path.join(new_foldername, self.lib_folder) )
-        os.mkdir( os.path.join(new_foldername, self.static_folder) )
+        _create_folder( new_foldername )
+        _create_folder( os.path.join(new_foldername, self.static_folder) )
+        _create_folder( os.path.join(new_foldername, self.lib_folder) )
 
         fn = os.path.join(new_foldername, "index.html")
         f = open(fn, "w")
@@ -119,7 +125,19 @@ class Notes(Abstract_Page):
             img = ""
 
         if code :
-            code = "<pre>%s</pre>" % code
+            lines = code.splitlines()
+            l0 = None
+            for l in lines :
+                if len(l) != 0 :
+                    l0 = l 
+                    break
+
+            if not l0 :
+                code=""
+            else :
+                indent = len(l0) - len(l0.strip()) 
+                strip_lines = [ l[indent:] for l in lines ]
+                code = "<pre>%s</pre>" % '\n'.join(strip_lines)
         else :
             code = ""
 
@@ -172,7 +190,7 @@ class Notes(Abstract_Page):
         self.notes_html.append(html)
 
     def get_html(self) :
-        html=""""
+        html="""
         <div class="uk-child-width-1-3@m uk-child-width-1-2@s" uk-grid="masonry: true">
         {notes}
         </div>
@@ -311,9 +329,9 @@ class DagreDAG(Abstract_DAG) :
                 res.append( "%s {%s} " % (n, str_rules) ) ;           
             return '\n'.join(res)
 
-        template = """"
-        <script src="https://d3js.org/d3.v4.min.js" charset="utf-8"></script>
-        <script src="https://dagrejs.github.io/project/dagre-d3/latest/dagre-d3.min.js"></script>
+        template = """
+        <script src="../static/d3/js/d3.v4.min.js" charset="utf-8"></script>
+        <script src="../static/dagre-d3/js/dagre-d3.js"></script>
         
         <style id="css">
             {css}
@@ -349,5 +367,5 @@ class DagreDAG(Abstract_DAG) :
             svg.attr("height", g.graph().height + 40);
         </script>""".format(canvas_height=self.canvas_height, canvas_width=self.canvas_width, css = _set_css(), nodes = _set_nodes(), edges= _set_edges())
 
-        print(template)
+        # print(template)
         return template
