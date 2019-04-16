@@ -5,3 +5,9 @@ There's no better way to keep a clean record of your amazing experiments and res
 Current version allows you to create paginated notebooks containing images (from urls), code and graphs (like Deep Learning models from pyTorch for example). In the future I may add support for static images and plots, and embedding in Jupyter notebooks.
 
 Contributions welcome!
+
+# Installation
+
+* Clone it
+* Go into the Spyrkle folder
+* Do *python setup.py develop*
