@@ -172,6 +172,9 @@ class DagreGraph(Abstract_Graph) :
         <script src="{libs}/d3/js/d3.v4.min.js" charset="utf-8"></script>
         <script src="{libs}/dagre-d3/js/dagre-d3.js"></script>
         
+        <div class="uk-card uk-card-body uk-text-center">
+            {caption}
+        </div>
         <div class="uk-grid">
             <svg class="uk-width-expand@s" id="svg-canvas" ></svg>
             <div class="uk-width-1-2@s uk-width-1-4@m uk-container">
@@ -227,9 +230,6 @@ class DagreGraph(Abstract_Graph) :
             // Center the graph
             svg.attr("height", g.graph().height + 40);
         </script>
-        <div class="uk-card uk-card-body uk-text-center">
-            {caption}
-        </div>
         """.format(nodes = _set_nodes(), edges= _set_edges(), graph_attributes=graph_attributes, caption=self.caption, libs=self.notebook.lib_folder)
 
         return template
