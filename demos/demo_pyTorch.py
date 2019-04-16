@@ -56,7 +56,7 @@ def get_name(node) :
 
     return base_name
 
-#node uniqye id
+#node unique id
 def get_uid(node) :
     #ignore constant and paran nodes
     if get_name(node).lower() in ["constant", "param"] :
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     #add a DAG page
     dag = notebook.DagreDAG(BOOK, "Network")
     
-    #craql the DAG and find the structure
+    #crawl the DAG and find the structure
     dag.crawl(
         torch_graph.nodes(),
         get_next,
