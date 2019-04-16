@@ -59,9 +59,9 @@ class Notebook(object):
         """.format(pages_css = "\n".join(css_links) )
   
         header="<h1 class='uk-header-primary'>{name}</h1>".format(name=self.name)
-        switcher='<div class="uk-button-group">{menu}</div>'.format(menu=''.join(switch_menu)) 
+        switcher='<div class="uk-button-group uk-margin">{menu}</div>'.format(menu=''.join(switch_menu)) 
         switcher_html='<div class="uk-container">{data}</div>'.format(data=''.join(switch_html)) 
-        body = "<body class='uk-container'>{header}\n{switcher}\n{switcher_html}\n{js}</body>".format(header=header, switcher=switcher, switcher_html=switcher_html, js=js)
+        body = "{js}<body class='uk-container'>{header}\n{switcher}\n{switcher_html}\n</body>".format(header=header, switcher=switcher, switcher_html=switcher_html, js=js)
 
         footer = "<footer><p class='uk-text-meta'>Generetad by Spyrkle, static documentation for your glorious pythonic work</p></footer>"
 
@@ -264,7 +264,7 @@ class Abstract_DAG(Abstract_Page):
         self._init()
 
     def _init(self) :
-        self.nodes, self.edges = {}, set()
+        self.nodes, self.edges = {}, {}
         self.node_labels = set()
         # self.node_attributes = {}
 
@@ -274,7 +274,7 @@ class Abstract_DAG(Abstract_Page):
             self.node_labels.add(d)
 
         self.nodes = nodes
-        self.edges = set(edges)
+        self.edges = edges
 
     def parse(self, fct, *args, **kwargs) :
         self.nodes, self.edges = fct(*args, **kwargs)
@@ -291,26 +291,40 @@ class Abstract_DAG(Abstract_Page):
 
         return name
 
-    def crawl(self, roots, get_next_fct, get_uid_fct, get_name_fct, parents_to_children=True, get_attributes_fct = None, autoincrement_names=True, reset=False) :
+    def crawl(self, roots, get_next_fct, get_uid_fct, get_name_fct, parents_to_children=True, get_node_attributes_fct = None, get_edges_attributes_fct = None, autoincrement_names=True, reset=False) :
 
         def _derive(root, nodes, edges, node_labels) :
             root_name = self.resolve_node_name(get_name_fct(root), autoincrement_names)
             node_labels.add(root_name)
-            nodes[get_uid_fct(root)] = {
-                "label": root_name
-            }
+            root_uid = get_uid_fct(root)
+            if root_uid :
+                nodes[root_uid] = {
+                    "label": root_name,
+                    "attributes": {
+                        "label": root_name
+                    }
+                }
 
-            if get_attributes_fcts :
-                nodes[get_uid_fct(root)].update( get_attributes_fct(root) )
+                if get_node_attributes_fct :
+                    nodes[root_uid]["attributes"].update(get_node_attributes_fct(root))
+                self.nodes[root_uid]["label"] = self.nodes[root_uid]["label"] + "(%s)" % ( len(self.nodes[root_uid]["attributes"]) -1 )
 
-            for d in get_next_fct(root) :
-                if d is not root :
-                    if parents_to_children :
-                        edges.add( (get_uid_fct(root), get_uid_fct(d)) )
-                    else :
-                        edges.add( (get_uid_fct(d), get_uid_fct(root)) )
-                    
-                    _derive(d, nodes, edges, node_labels)
+                for d in get_next_fct(root) :
+                    if d is not root :
+                        child_uid = get_uid_fct(d)
+                        if child_uid :
+                            if parents_to_children :
+                                con = (root_uid, child_uid)
+                            else :
+                                con = (child_uid, root_uid)
+                            
+                            self.edges[con] = {}
+                            if get_edges_attributes_fct :
+                                self.edges[con]["attributes"] = get_edges_attributes_fct(con[0], con[1])
+                            else :
+                                self.edges[con]["attributes"] = {}
+                            
+                            _derive(d, nodes, edges, node_labels)
 
         if reset :
             self._init()
@@ -323,9 +337,10 @@ class DagreDAG(Abstract_DAG) :
 
     def __init__(self, notebook, name):
         super(DagreDAG, self).__init__(notebook, name)
-        self.canvas_height = 600
-        self.canvas_width = 960
-        self.reset_css()
+        self.graph_attributes = {}
+
+    def set_attributes(self, dct) :
+        self.graph_attributes = dct
 
     def reset_css(self) :
         self.css_rules = {}
@@ -344,26 +359,25 @@ class DagreDAG(Abstract_DAG) :
         self.css_rules[".edgePath path"] = (
             "stroke: #333",
             'stroke-width: 1.5px'
-        )
-
-        self.css_rules["svg"] = (
-          'border: 1px solid',
-          'overflow: hidden',
-          'margin: 0 auto',
-        )
-
-    def set_canvas(self, height, width) :
-        self.canvas_height = height
-        self.canvas_width = width      
+        )    
 
     def get_html(self) :
+        def _pseudo_jsonify(dct) :
+            attrs = [ ]
+            for k, v in dct.items() :
+                if type(v) is dict :
+                    vv = _pseudo_jsonify(v)
+                    attrs.append("'%s': {%s}" % (k, vv))
+                else :
+                    attrs.append("'%s': '%s'" % (k, v))
+
+            return ','.join(attrs)
+
         def _set_nodes() :
             res = []
-            for node_id, attributes in self.nodes.items() :
-                attrs = []
-                for k, v in attributes.items() :
-                    attrs.append("%s: '%s'" % (k, v))
-                res.append( "g.setNode('{node_id}', {{ {attributes} }});".format(node_id = node_id, attributes = '.'.join(attrs) ))
+            for node_id, params in self.nodes.items() :
+                attrs = _pseudo_jsonify(params)
+                res.append( "g.setNode('{node_id}', {{ {attributes} }} );".format(node_id = node_id, attributes = attrs ))
             
             return '\n'.join(res)
 
@@ -373,12 +387,39 @@ class DagreDAG(Abstract_DAG) :
                 res.append( "g.setEdge('%s', '%s')" % (n1, n2) ) ;
             return '\n'.join(res)
 
+        graph_attributes = "{%s}" % _pseudo_jsonify(self.graph_attributes)
+        # print(graph_attributes)
         template = """
         <script src="../static/libs/d3/js/d3.v4.min.js" charset="utf-8"></script>
         <script src="../static/libs/dagre-d3/js/dagre-d3.js"></script>
         
-        <svg id="svg-canvas" width={canvas_width} height={canvas_height}></svg>
+        <div class="uk-grid">
+            <svg class="uk-width-expand@s" id="svg-canvas" ></svg>
+            <div class="uk-width-1-2@s uk-width-1-4@m uk-container">
+                <div class="uk-card uk-card-default">
+                    <h3 class="uk-card-title uk-margin uk-text-center"> Graph attributes</h3>
+                    <div class="uk-card-body" id="graph-attributes"></div>
+                </div>
+                <div class="uk-card uk-card-default">
+                    <h3 class="uk-card-title uk-margin uk-text-center"> Node attributes</h3>
+                    <div class="uk-card-body" id="node-attributes"></div>
+                </div>
+            </div>
+        </div>
+
+
         <script id="js">
+            var show_attributes = function(attributes, div_id){{
+                html = `<ul class="uk-list uk-list-striped">`
+                for (const [key, value] of Object.entries( attributes) ) {{
+                    html = html + `<li> ${{key}}: ${{value}}</li>`
+                }}
+                html = html + '</ul>'
+                $('#'+div_id).html(html)
+            }}
+
+            show_attributes({graph_attributes}, "graph-attributes")
+
             // Create the input graph
             var g = new dagreD3.graphlib.Graph()
               .setGraph({{}})
@@ -402,10 +443,10 @@ class DagreDAG(Abstract_DAG) :
             // Run the renderer. This is what draws the final graph.
             render(d3.select("svg g"), g);
 
+            svgGroup.selectAll("g.node").on('click', function(name){{ show_attributes(g.node(name)['attributes'], 'node-attributes') }} )
+
             // Center the graph
-            var xCenterOffset = (svg.attr("width") - g.graph().width) / 2;
-            svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");
             svg.attr("height", g.graph().height + 40);
-        </script>""".format(canvas_height=self.canvas_height, canvas_width=self.canvas_width, nodes = _set_nodes(), edges= _set_edges())
+        </script>""".format(nodes = _set_nodes(), edges= _set_edges(), graph_attributes=graph_attributes)
 
         return template
