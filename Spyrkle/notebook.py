@@ -423,8 +423,8 @@ class DagreDAG(Abstract_DAG) :
         graph_attributes = "{%s}" % _pseudo_jsonify(self.graph_attributes)
         
         template = """
-        <script src="../static/libs/d3/js/d3.v4.min.js" charset="utf-8"></script>
-        <script src="../static/libs/dagre-d3/js/dagre-d3.js"></script>
+        <script src="{libs}/d3/js/d3.v4.min.js" charset="utf-8"></script>
+        <script src="{libs}/dagre-d3/js/dagre-d3.js"></script>
         
         <div class="uk-grid">
             <svg class="uk-width-expand@s" id="svg-canvas" ></svg>
@@ -484,7 +484,7 @@ class DagreDAG(Abstract_DAG) :
         <div class="uk-card uk-card-body uk-text-center">
             {caption}
         </div>
-        """.format(nodes = _set_nodes(), edges= _set_edges(), graph_attributes=graph_attributes, caption=self.caption)
+        """.format(nodes = _set_nodes(), edges= _set_edges(), graph_attributes=graph_attributes, caption=self.caption, libs=self.notebook.lib_folder)
 
         return template
 
