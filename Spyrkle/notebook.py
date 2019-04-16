@@ -18,18 +18,18 @@ class Notebook(object):
         switch_menu = []
 
         i = 0
+        css_links = []
         for name, page in self.pages.items() :
-            if i == 0 :
-                c = "uk-button-primary"
-            else :
-                c = "uk-button-default"
-
             page_id = 'page-%s' % i
-            switch_menu.append( """<spyrkle-page-selector onclick="toggle_page('{pid}')" class='uk-button {clss}' id='{pid}-selector'>{name}</spyrkle-page-selector>""".format(name=page.name, clss= c, pid=page_id) )
+            switch_menu.append( """<spyrkle-page-selector onclick="toggle_page('{pid}')" class='uk-button uk-button-default' id='{pid}-selector'>{name}</spyrkle-page-selector>""".format(name=page.name, pid=page_id) )
             switch_html.append( "<spyrkle-page id='{pid}'>\n{html}\n</spyrkle-page>".format(pid=page_id, html=page.get_html()) )
+            
+            if page.has_css() :
+                css_links.append('<link rel="stylesheet" href="./static/css/{name}.css" />'.format(name=name))
             i += 1
 
-        head = """<head>
+        head = """
+        <head>
             <!doctype html>
             <meta charset="utf-8">
             <title>{name}</title>
@@ -46,9 +46,17 @@ class Notebook(object):
             <script src="../static/libs/uikit-3.0.3/js/uikit.min.js"></script>
             <script src="../static/libs/uikit-3.0.3/js/uikit-icons.min.js"></script>
 
-            <!-- SPYRKLE -->
+            <!-- Spyrkle Pages CSS -->
+            {pages_css}
+
+            <!-- SPYRKLE JS-->
             <script src="../static/libs/spyrkle/js/spyrkle.js"></script>
-        """
+
+            <script>
+                document.onload( toggle_page('page-0') )
+            </script>
+
+        """.format(pages_css = "\n".join(css_links) )
   
         header="<h1 class='uk-header-primary'>{name}</h1>".format(name=self.name)
         switcher='<div class="uk-button-group">{menu}</div>'.format(menu=''.join(switch_menu)) 
@@ -64,7 +72,7 @@ class Notebook(object):
 
         def _create_folder(folder_name):
             try:
-                os.mkdir(new_foldername)
+                os.mkdir(folder_name)
             except FileExistsError as e:
                print("Warning: Folder %s already exists" % folder_name)
         
@@ -77,9 +85,21 @@ class Notebook(object):
                 new_foldername = foldername + "_%s" % i
                 i += 1
 
+        static_folder = os.path.join(new_foldername, self.static_folder)
+        css_folder = os.path.join(new_foldername, self.static_folder, "css")
+        js_folder = os.path.join(new_foldername, self.static_folder, "js")
+
         _create_folder( new_foldername )
-        _create_folder( os.path.join(new_foldername, self.static_folder) )
+        _create_folder( static_folder )
+        _create_folder( css_folder )
+        _create_folder( js_folder )
         _create_folder( os.path.join(new_foldername, self.lib_folder) )
+
+        for name, page in self.pages.items() :
+            fn = os.path.join(css_folder, "%s.css" % name)
+            f = open(fn, "w")
+            f.write(page.get_css())
+            f.close()
 
         fn = os.path.join(new_foldername, "index.html")
         f = open(fn, "w")
@@ -96,12 +116,34 @@ class Abstract_Page(object):
         self.libs_urls = set()
         
         self.notebook.add_page(self)
-    
+        self.css_rules = {}
+        # self.js_scripts = {}
+        self.reset_css()
+
+    def has_css(self) :
+        return len(self.css_rules) > 0
+
     def register_static(self, url) :
         self.static_urls.add(url) 
     
     def register_lib(self, url) :
         self.lib_urls.add(url)
+
+    def clear_css(self) :
+        self.css_rules = {}
+
+    def set_css_rule(self, name, values) :
+        self.css_rules["name"] = ';\n'.join(values)
+
+    def reset_css(self) :
+        pass
+
+    def get_css(self) :
+        res = []
+        for n, rules in self.css_rules.items() :
+            str_rules = '; '.join(rules)
+            res.append( "%s {%s} " % (n, str_rules) ) ;
+        return '\n'.join(res)
 
     def get_html(self) :
         raise NotImplemented("Must be implemented in child")
@@ -237,7 +279,6 @@ class Abstract_DAG(Abstract_Page):
     def parse(self, fct, *args, **kwargs) :
         self.nodes, self.edges = fct(*args, **kwargs)
     
-    # @classmethod
     def resolve_node_name(self, base_name, autoinc) :
         if not autoinc :
             return base_name
@@ -250,7 +291,7 @@ class Abstract_DAG(Abstract_Page):
 
         return name
 
-    def crawl(self, roots, get_next_fct, get_uid_fct, get_name_fct, parents_to_children=True, get_attributes_fcts = None, autoincrement_names=True, reset=False) :
+    def crawl(self, roots, get_next_fct, get_uid_fct, get_name_fct, parents_to_children=True, get_attributes_fct = None, autoincrement_names=True, reset=False) :
 
         def _derive(root, nodes, edges, node_labels) :
             root_name = self.resolve_node_name(get_name_fct(root), autoincrement_names)
@@ -260,8 +301,7 @@ class Abstract_DAG(Abstract_Page):
             }
 
             if get_attributes_fcts :
-                for attr_name, fct in get_attributes_fcts :
-                    nodes[get_uid_fct(root)] = fct(root)
+                nodes[get_uid_fct(root)].update( get_attributes_fct(root) )
 
             for d in get_next_fct(root) :
                 if d is not root :
@@ -312,12 +352,6 @@ class DagreDAG(Abstract_DAG) :
           'margin: 0 auto',
         )
 
-    def clear_css(self) :
-        self.css_rules = {}
-
-    def set_css_rule(self, name, values) :
-        self.css_rules["name"] = ';\n'.join(values)
-
     def set_canvas(self, height, width) :
         self.canvas_height = height
         self.canvas_width = width      
@@ -339,20 +373,10 @@ class DagreDAG(Abstract_DAG) :
                 res.append( "g.setEdge('%s', '%s')" % (n1, n2) ) ;
             return '\n'.join(res)
 
-        def _set_css() :
-            res = []
-            for n, rules in self.css_rules.items() :
-                str_rules = '; '.join(rules)
-                res.append( "%s {%s} " % (n, str_rules) ) ;           
-            return '\n'.join(res)
-
         template = """
         <script src="../static/libs/d3/js/d3.v4.min.js" charset="utf-8"></script>
         <script src="../static/libs/dagre-d3/js/dagre-d3.js"></script>
         
-        <style id="css">
-            {css}
-        </style>
         <svg id="svg-canvas" width={canvas_width} height={canvas_height}></svg>
         <script id="js">
             // Create the input graph
@@ -382,7 +406,6 @@ class DagreDAG(Abstract_DAG) :
             var xCenterOffset = (svg.attr("width") - g.graph().width) / 2;
             svgGroup.attr("transform", "translate(" + xCenterOffset + ", 20)");
             svg.attr("height", g.graph().height + 40);
-        </script>""".format(canvas_height=self.canvas_height, canvas_width=self.canvas_width, css = _set_css(), nodes = _set_nodes(), edges= _set_edges())
+        </script>""".format(canvas_height=self.canvas_height, canvas_width=self.canvas_width, nodes = _set_nodes(), edges= _set_edges())
 
-        # print(template)
         return template

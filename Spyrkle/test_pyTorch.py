@@ -10,18 +10,18 @@ BOOK = notebook.Notebook("test_pytorch_notebook")
 # Define model
 class TheModelClass(nn.Module):
     def __init__(self):
-        # global BOOK
-        # notes = notebook.Notes(BOOK, "Model")
-        # notes.add_note("Description", "This model comes from this page: https://pytorch.org/tutorials/beginner/saving_loading_models.html")
-        # notes.add_note(
-        #     "Code",
-        #     "These are the first layers",
-        #     code = """
-        #         self.conv1 = nn.Conv2d(3, 6, 5)
-        #         self.pool = nn.MaxPool2d(2, 2)
-        #         self.conv2 = nn.Conv2d(6, 16, 5)
-        #     """.replace("                ", "")
-        # )
+        global BOOK
+        notes = notebook.Notes(BOOK, "Model")
+        notes.add_note("Description", "This model comes from this page: https://pytorch.org/tutorials/beginner/saving_loading_models.html")
+        notes.add_note(
+            "Code",
+            "These are the first layers",
+            code = """
+                self.conv1 = nn.Conv2d(3, 6, 5)
+                self.pool = nn.MaxPool2d(2, 2)
+                self.conv2 = nn.Conv2d(6, 16, 5)
+            """.replace("                ", "")
+        )
 
         super(TheModelClass, self).__init__()
         self.conv1 = nn.Conv2d(3, 6, 5)
@@ -112,7 +112,6 @@ def get_next(node):
     # print(node, [o.node() for o in node.outputs()])
     return [o.node() for o in node.inputs()]
 
-notes0 = notebook.Notes(BOOK, "Model2")
 
 inputs = torch.FloatTensor( numpy.random.random((6, 3, 32, 32)) )
 # pyTorchParse(model, inputs)
