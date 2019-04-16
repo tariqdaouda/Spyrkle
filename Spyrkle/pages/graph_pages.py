@@ -25,7 +25,7 @@ class GraphCrawler(object):
     def get_node_attributes():
         return {}
     
-    def get_edges_attributes():
+    def get_edge_attributes():
         return {}
 
 class Abstract_Graph(Abstract_Page):
@@ -99,7 +99,7 @@ class Abstract_Graph(Abstract_Page):
                                 con = (child_uid, root_uid)
                             
                             self.edges[con] = {}
-                            self.edges[con]["attributes"] = crawler.get_edges_attributes(con[0], con[1])
+                            self.edges[con]["attributes"] = crawler.get_edge_attributes(con[0], con[1])
                             
                             self.edges[con].update(crawler.get_edge_parameters(con[0], con[1]))
 

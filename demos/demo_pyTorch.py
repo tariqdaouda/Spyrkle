@@ -48,8 +48,8 @@ class CustomCrawler(gmore.pyTorchCrawler):
     """docstring for CustomCrawler"""
         
     #set some parameters ex: for style
-    def get_node_params(node) :
-        if get_name(node).lower().find("relu") > -1 :
+    def get_node_parameters(self, node) :
+        if self.get_node_label(node).lower().find("relu") > -1 :
             return {"class": "relu"}
         return {}
 
