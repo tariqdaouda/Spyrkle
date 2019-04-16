@@ -83,10 +83,18 @@ opt_attr = optimizer.state_dict()["param_groups"][0]
 del opt_attr['params']
 dag.set_attributes(opt_attr)
 dag.set_caption("This is a model")
-# print(dag.nodes)
-# print("-------------")
-# print(dag.edges)
 
+notes = notebook.Notes(BOOK, "Notes on life")
+for i in range(10) :
+    notes.add_note("Note %s" % i, "Life is %s Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias dolorum asperiores at veritatis architecto sequi nulla perspiciatis rerum modi, repellat assumenda quisquam dolorem sit molestiae aspernatur cum nemo placeat laboriosam." % i)
+
+notes = notebook.Notes(BOOK, "Notes on life 2")
+for i in range(10) :
+    notes.add_note("Note %s" % (i+10), "Life is %s Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias dolorum asperiores at veritatis architecto sequi nulla perspiciatis rerum modi, repellat assumenda quisquam dolorem sit molestiae aspernatur cum nemo placeat laboriosam." % i)
+
+notes = notebook.Notes(BOOK, "Notes on life 3")
+for i in range(10) :
+    notes.add_bullet_points_note("Note %s" % (i+100), ["test", "text", "iop"])
 
 
 BOOK.save(overwrite=True)

@@ -5,10 +5,17 @@ class Notebook(object):
     """docstring for Notebook"""
     def __init__(self, name, lib_folder="libs", static_folder="static"):
         super(Notebook, self).__init__()
+        import os
+        import sys
+        import inspect
+
         self.name = name
         self.pages = OrderedDict()
         self.lib_folder = lib_folder
         self.static_folder = static_folder
+        
+        self.dirname = os.path.dirname(inspect.getfile(sys.modules[__name__]))
+        self.web_libs_dir = os.path.join(self.dirname, "static/libs")
 
     def add_page(self, page) :
         self.pages[page.name] = page
@@ -37,23 +44,23 @@ class Notebook(object):
         
         js ="""
             <!-- JQUERY -->
-            <script src="../static/libs/jquery/js/jquery-3.4.0.min.js"></script>
+            <script src="./{libs_dir}/jquery/js/jquery-3.4.0.min.js"></script>
             
             <!-- UIkit CSS -->
-            <link rel="stylesheet" href="../static/libs/uikit-3.0.3/css/uikit.css" />
+            <link rel="stylesheet" href="./{libs_dir}/uikit-3.0.3/css/uikit.css" />
 
             <!-- UIkit JS -->
-            <script src="../static/libs/uikit-3.0.3/js/uikit.min.js"></script>
-            <script src="../static/libs/uikit-3.0.3/js/uikit-icons.min.js"></script>
+            <script src="./{libs_dir}/uikit-3.0.3/js/uikit.min.js"></script>
+            <script src="./{libs_dir}/uikit-3.0.3/js/uikit-icons.min.js"></script>
 
             <!-- Spyrkle Pages CSS -->
             {pages_css}
 
             <!-- SPYRKLE JS-->
-            <script src="../static/libs/spyrkle/js/spyrkle.js"></script>
+            <script src="./{libs_dir}/spyrkle/js/spyrkle.js"></script>
 
             
-        """.format(pages_css = "\n".join(css_links) )
+        """.format(pages_css = "\n".join(css_links), libs_dir=self.lib_folder )
   
         header="<h1 class='uk-header-primary uk-margin uk-text-center'>{name}</h1>".format(name=self.name)
         switcher='<div class="uk-button-group uk-margin">{menu}</div>'.format(menu=''.join(switch_menu)) 
@@ -66,6 +73,7 @@ class Notebook(object):
 
     def save(self, folder = ".", overwrite = False) :
         import os
+        import shutil
 
         def _create_folder(folder_name):
             try:
@@ -85,12 +93,18 @@ class Notebook(object):
         static_folder = os.path.join(new_foldername, self.static_folder)
         css_folder = os.path.join(new_foldername, self.static_folder, "css")
         js_folder = os.path.join(new_foldername, self.static_folder, "js")
+        libs_folder = os.path.join(new_foldername, self.lib_folder)
 
         _create_folder( new_foldername )
         _create_folder( static_folder )
         _create_folder( css_folder )
         _create_folder( js_folder )
-        _create_folder( os.path.join(new_foldername, self.lib_folder) )
+        # _create_folder( os.path.join(new_foldername, self.lib_folder) )
+
+        if os.path.isdir(libs_folder) :
+            shutil.rmtree(libs_folder) 
+        
+        shutil.copytree(self.web_libs_dir, libs_folder)
 
         for name, page in self.pages.items() :
             fn = os.path.join(css_folder, "%s.css" % name)
@@ -247,7 +261,7 @@ class Notes(Abstract_Page):
 
     def get_html(self) :
         html="""
-        <div class="uk-grid-small uk-child-width-expand@s uk-text-center" uk-grid >
+        <div class="uk-grid-small uk-child-width-1-4@m uk-child-width-1-1@s uk-text-center" uk-grid >
         {notes}
         </div>
         """.format(notes = "\n".join(self.notes_html))
@@ -473,3 +487,4 @@ class DagreDAG(Abstract_DAG) :
         """.format(nodes = _set_nodes(), edges= _set_edges(), graph_attributes=graph_attributes, caption=self.caption)
 
         return template
+
