@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-BOOK = notebook.Notebook("test_pytorch_notebook")
+BOOK = notebook.Notebook("Test pyTorch Notebook")
 
 # Define model
 class TheModelClass(nn.Module):
@@ -82,7 +82,7 @@ dag.set_css_rule(".conv", ("fill: #00ffd0", ) )
 opt_attr = optimizer.state_dict()["param_groups"][0]
 del opt_attr['params']
 dag.set_attributes(opt_attr)
-
+dag.set_caption("This is a model")
 # print(dag.nodes)
 # print("-------------")
 # print(dag.edges)

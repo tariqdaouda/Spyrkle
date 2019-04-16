@@ -55,12 +55,12 @@ class Notebook(object):
             
         """.format(pages_css = "\n".join(css_links) )
   
-        header="<h1 class='uk-header-primary'>{name}</h1>".format(name=self.name)
+        header="<h1 class='uk-header-primary uk-margin uk-text-center'>{name}</h1>".format(name=self.name)
         switcher='<div class="uk-button-group uk-margin">{menu}</div>'.format(menu=''.join(switch_menu)) 
         switcher_html='<div class="uk-container">{data}</div>'.format(data=''.join(switch_html)) 
         body = """{js}<body onload="toggle_page('page-0')" class='uk-container'>{header}\n{switcher}\n{switcher_html}\n</body>""".format(header=header, switcher=switcher, switcher_html=switcher_html, js=js)
 
-        footer = "<footer><p class='uk-text-meta'>Generetad by Spyrkle, static documentation for your glorious pythonic work</p></footer>"
+        footer = "<footer class='uk-text-meta uk-text-center uk-margin'><p class='uk-text-meta'>Generetad by Spyrkle, static documentation for your glorious pythonic work</p></footer>"
 
         return '\n'.join((head, body, footer))
 
@@ -73,7 +73,7 @@ class Notebook(object):
             except FileExistsError as e:
                print("Warning: Folder %s already exists" % folder_name)
         
-        foldername = os.path.join(folder, self.name)
+        foldername = os.path.join(folder, self.name.replace(" ", "_").lower())
 
         new_foldername = foldername
         if not overwrite :
@@ -247,7 +247,7 @@ class Notes(Abstract_Page):
 
     def get_html(self) :
         html="""
-        <div class="uk-child-width-1-3@m uk-child-width-1-2@s" uk-grid="masonry: true">
+        <div class="uk-grid-small uk-child-width-expand@s uk-text-center" uk-grid >
         {notes}
         </div>
         """.format(notes = "\n".join(self.notes_html))
@@ -261,8 +261,12 @@ class Abstract_DAG(Abstract_Page):
         self._init()
 
     def _init(self) :
+        self.caption = ""
         self.nodes, self.edges = {}, {}
         self.node_labels = set()
+
+    def set_caption(self, caption) :
+        self.caption = caption
 
     def force_set(self, nodes, edges) :
         self._init()
@@ -462,6 +466,10 @@ class DagreDAG(Abstract_DAG) :
 
             // Center the graph
             svg.attr("height", g.graph().height + 40);
-        </script>""".format(nodes = _set_nodes(), edges= _set_edges(), graph_attributes=graph_attributes)
+        </script>
+        <div class="uk-card uk-card-body uk-text-center">
+            {caption}
+        </div>
+        """.format(nodes = _set_nodes(), edges= _set_edges(), graph_attributes=graph_attributes, caption=self.caption)
 
         return template
