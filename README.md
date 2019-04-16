@@ -11,3 +11,5 @@ Contributions welcome!
 * Clone it
 * Go into the Spyrkle folder
 * Do *python setup.py develop*
+
+As always it is highly recommended to install Spyrkle inside a virtual environement. Use conda, it's better.
