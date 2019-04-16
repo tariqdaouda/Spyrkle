@@ -207,7 +207,7 @@ class Notes(Abstract_Page):
             else :
                 indent = len(l0) - len(l0.strip()) 
                 strip_lines = [ l[indent:] for l in lines ]
-                code = "<pre>%s</pre>" % '\n'.join(strip_lines)
+                code = "<pre class='uk-text-left'>%s</pre>" % '\n'.join(strip_lines)
         else :
             code = ""
 
