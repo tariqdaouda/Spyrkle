@@ -40,11 +40,11 @@ class TheModelClass(nn.Module):
         x = self.fc3(x)
         return x
 
-# Initialize model
-model = TheModelClass()
-
-# Initialize optimizer
-optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+def get_graph(model, inputs) :
+    trace, out = torch.jit.get_trace_graph(model, inputs)
+    torch.onnx._optimize_trace(trace, torch.onnx.OperatorExportTypes.ONNX)
+    torch_graph = trace.graph()
+    return torch_graph
 
 def get_name(node) :
     base_name = node.scopeName()[len(model.__class__.__name__)+1:]
@@ -69,32 +69,37 @@ def get_node_params(node) :
         return {"class": "conv"}
     return {}
 
-inputs = torch.FloatTensor( numpy.random.random((6, 3, 32, 32)) )
+if __name__ == '__main__':
+    # Initialize model
+    model = TheModelClass()
 
-trace, out = torch.jit.get_trace_graph(model, inputs)
-torch.onnx._optimize_trace(trace, torch.onnx.OperatorExportTypes.ONNX)
-torch_graph = trace.graph()
+    # Initialize optimizer
+    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
-dag = notebook.DagreDAG(BOOK, "Network")
-dag.crawl(torch_graph.nodes(), get_next, get_uid, get_name, get_node_parameters_fct=get_node_params, get_node_attributes_fct = get_node_attributes, parents_to_children=False, autoincrement_names=False)
-dag.set_css_rule(".conv", ("fill: #00ffd0", ) )
+    inputs = torch.FloatTensor( numpy.random.random((6, 3, 32, 32)) )
 
-opt_attr = optimizer.state_dict()["param_groups"][0]
-del opt_attr['params']
-dag.set_attributes(opt_attr)
-dag.set_caption("This is a model")
+    torch_graph = get_graph(model, inputs)
+    dag = notebook.DagreDAG(BOOK, "Network")
+    dag.crawl(torch_graph.nodes(), get_next, get_uid, get_name, get_node_parameters_fct=get_node_params, get_node_attributes_fct = get_node_attributes, parents_to_children=False, autoincrement_names=False)
+    dag.set_css_rule(".conv", ("fill: #00ffd0", ) )
 
-notes = notebook.Notes(BOOK, "Notes on life")
-for i in range(10) :
-    notes.add_note("Note %s" % i, "Life is %s Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias dolorum asperiores at veritatis architecto sequi nulla perspiciatis rerum modi, repellat assumenda quisquam dolorem sit molestiae aspernatur cum nemo placeat laboriosam." % i)
+    opt_attr = optimizer.state_dict()["param_groups"][0]
+    del opt_attr['params']
+    dag.set_attributes(opt_attr)
+    dag.set_caption("This is a model")
 
-notes = notebook.Notes(BOOK, "Notes on life 2")
-for i in range(10) :
-    notes.add_note("Note %s" % (i+10), "Life is %s Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias dolorum asperiores at veritatis architecto sequi nulla perspiciatis rerum modi, repellat assumenda quisquam dolorem sit molestiae aspernatur cum nemo placeat laboriosam." % i)
+    #FINISHING WITH SOM NONSENSE
+    notes = notebook.Notes(BOOK, "Notes on life")
+    for i in range(10) :
+        notes.add_note("Note %s" % i, "Life is %s Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias dolorum asperiores at veritatis architecto sequi nulla perspiciatis rerum modi, repellat assumenda quisquam dolorem sit molestiae aspernatur cum nemo placeat laboriosam." % i)
 
-notes = notebook.Notes(BOOK, "Notes on life 3")
-for i in range(10) :
-    notes.add_bullet_points_note("Note %s" % (i+100), ["test", "text", "iop"])
+    notes = notebook.Notes(BOOK, "Notes on life 2")
+    for i in range(10) :
+        notes.add_note("Note %s" % (i+10), "Life is %s Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias dolorum asperiores at veritatis architecto sequi nulla perspiciatis rerum modi, repellat assumenda quisquam dolorem sit molestiae aspernatur cum nemo placeat laboriosam." % i)
+
+    notes = notebook.Notes(BOOK, "Notes on life 3")
+    for i in range(10) :
+        notes.add_bullet_points_note("Note %s" % (i+100), ["test", "text", "iop"])
 
 
 BOOK.save(overwrite=True)
