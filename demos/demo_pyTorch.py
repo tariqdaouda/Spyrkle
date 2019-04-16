@@ -76,14 +76,14 @@ if __name__ == '__main__':
     dag.set_css_rule(".relu", ("fill: #00ffd0", ) )
 
     #ass the infos of the optimiser to the graph
-    opt_attr = optimizer.state_dict()["param_groups"][0]
-    del opt_attr['params']
+    opt_attr = { "SGD-%s" % k : v for k, v in optimizer.state_dict()["param_groups"][0].items() }
+    del opt_attr['SGD-params']
     dag.set_attributes(opt_attr)
 
     #lets' add a caption
     dag.set_caption("This is a model taken from a pyTorch tutorial. It's a basic conv net")
 
-    #FINISHING WITH SOM NONSENSE
+    #FINISHING WITH SOME NONSENSE
     notes = pages.Notes(BOOK, "Notes on life")
     for i in range(10) :
         notes.add_note("Note %s" % i, "Life is %s Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias dolorum asperiores at veritatis architecto sequi nulla perspiciatis rerum modi, repellat assumenda quisquam dolorem sit molestiae aspernatur cum nemo placeat laboriosam." % i)
