@@ -16,13 +16,29 @@ class Notebook(object):
     def get_html(self) :
         switch_html = []
         switch_menu = []
+
+        i = 0
         for name, page in self.pages.items() :
-            switch_menu.append("<li><a href='#'>%s</a></li>" % page.name)
-            switch_html.append("<li>%s</li>" % page.get_html())
-        
+            if i == 0 :
+                c = "uk-button-primary"
+            else :
+                c = "uk-button-default"
+
+            page_id = 'page-%s' % i
+            switch_menu.append( """<spyrkle-page-selector onclick="toggle_page('{pid}')" class='uk-button {clss}' id='{pid}-selector'>{name}</spyrkle-page-selector>""".format(name=page.name, clss= c, pid=page_id) )
+            switch_html.append( "<spyrkle-page id='{pid}'>\n{html}\n</spyrkle-page>".format(pid=page_id, html=page.get_html()) )
+            i += 1
+
         head = """<head>
             <!doctype html>
             <meta charset="utf-8">
+            <title>{name}</title>
+        </head>""".format(name = self.name)
+        
+        js ="""
+            <!-- JQUERY -->
+            <script src="../static/libs/jquery/js/jquery-3.4.0.min.js"></script>
+            
             <!-- UIkit CSS -->
             <link rel="stylesheet" href="../static/libs/uikit-3.0.3/css/uikit.css" />
 
@@ -30,13 +46,14 @@ class Notebook(object):
             <script src="../static/libs/uikit-3.0.3/js/uikit.min.js"></script>
             <script src="../static/libs/uikit-3.0.3/js/uikit-icons.min.js"></script>
 
-            <title>{name}</title>
-        </head>""".format(name = self.name)
-        
-        heading="<h1 class='uk-heading-primary'>{name}</h1>".format(name=self.name)
-        switcher='<ul uk-tab>{menu}</ul>'.format(menu=''.join(switch_menu)) 
-        switcher_html='<ul class="uk-switcher uk-margin">{data}</ul>'.format(data=''.join(switch_html)) 
-        body = "<body class='uk-container'>{heading}\n{switcher}\n{switcher_html}</body>".format(heading=heading, switcher=switcher, switcher_html=switcher_html)
+            <!-- SPYRKLE -->
+            <script src="../static/libs/spyrkle/js/spyrkle.js"></script>
+        """
+  
+        header="<h1 class='uk-header-primary'>{name}</h1>".format(name=self.name)
+        switcher='<div class="uk-button-group">{menu}</div>'.format(menu=''.join(switch_menu)) 
+        switcher_html='<div class="uk-container">{data}</div>'.format(data=''.join(switch_html)) 
+        body = "<body class='uk-container'>{header}\n{switcher}\n{switcher_html}\n{js}</body>".format(header=header, switcher=switcher, switcher_html=switcher_html, js=js)
 
         footer = "<footer><p class='uk-text-meta'>Generetad by Spyrkle, static documentation for your glorious pythonic work</p></footer>"
 
@@ -87,7 +104,7 @@ class Abstract_Page(object):
         self.lib_urls.add(url)
 
     def get_html(self) :
-        raise NotImplemented("Must be impleemented in child")
+        raise NotImplemented("Must be implemented in child")
 
 class Notes(Abstract_Page):
     """docstring for Notes"""
@@ -330,8 +347,8 @@ class DagreDAG(Abstract_DAG) :
             return '\n'.join(res)
 
         template = """
-        <script src="../static/d3/js/d3.v4.min.js" charset="utf-8"></script>
-        <script src="../static/dagre-d3/js/dagre-d3.js"></script>
+        <script src="../static/libs/d3/js/d3.v4.min.js" charset="utf-8"></script>
+        <script src="../static/libs/dagre-d3/js/dagre-d3.js"></script>
         
         <style id="css">
             {css}
