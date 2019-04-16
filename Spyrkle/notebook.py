@@ -52,16 +52,13 @@ class Notebook(object):
             <!-- SPYRKLE JS-->
             <script src="../static/libs/spyrkle/js/spyrkle.js"></script>
 
-            <script>
-                document.onload( toggle_page('page-0') )
-            </script>
-
+            
         """.format(pages_css = "\n".join(css_links) )
   
         header="<h1 class='uk-header-primary'>{name}</h1>".format(name=self.name)
         switcher='<div class="uk-button-group uk-margin">{menu}</div>'.format(menu=''.join(switch_menu)) 
         switcher_html='<div class="uk-container">{data}</div>'.format(data=''.join(switch_html)) 
-        body = "{js}<body class='uk-container'>{header}\n{switcher}\n{switcher_html}\n</body>".format(header=header, switcher=switcher, switcher_html=switcher_html, js=js)
+        body = """{js}<body onload="toggle_page('page-0')" class='uk-container'>{header}\n{switcher}\n{switcher_html}\n</body>""".format(header=header, switcher=switcher, switcher_html=switcher_html, js=js)
 
         footer = "<footer><p class='uk-text-meta'>Generetad by Spyrkle, static documentation for your glorious pythonic work</p></footer>"
 
@@ -132,8 +129,8 @@ class Abstract_Page(object):
     def clear_css(self) :
         self.css_rules = {}
 
-    def set_css_rule(self, name, values) :
-        self.css_rules["name"] = ';\n'.join(values)
+    def set_css_rule(self, name, lst) :
+        self.css_rules[name] = lst
 
     def reset_css(self) :
         pass
@@ -266,7 +263,6 @@ class Abstract_DAG(Abstract_Page):
     def _init(self) :
         self.nodes, self.edges = {}, {}
         self.node_labels = set()
-        # self.node_attributes = {}
 
     def force_set(self, nodes, edges) :
         self._init()
@@ -291,10 +287,23 @@ class Abstract_DAG(Abstract_Page):
 
         return name
 
-    def crawl(self, roots, get_next_fct, get_uid_fct, get_name_fct, parents_to_children=True, get_node_attributes_fct = None, get_edges_attributes_fct = None, autoincrement_names=True, reset=False) :
+    def crawl(
+        self,
+        roots,
+        get_next_fct,
+        get_uid_fct,
+        get_node_label_fct,
+        get_node_parameters_fct=None,
+        get_edge_parameters_fct=None,
+        parents_to_children=True,
+        get_node_attributes_fct = None,
+        get_edges_attributes_fct = None,
+        autoincrement_names=True,
+        reset=False
+    ) :
 
         def _derive(root, nodes, edges, node_labels) :
-            root_name = self.resolve_node_name(get_name_fct(root), autoincrement_names)
+            root_name = self.resolve_node_name(get_node_label_fct(root), autoincrement_names)
             node_labels.add(root_name)
             root_uid = get_uid_fct(root)
             if root_uid :
@@ -308,6 +317,9 @@ class Abstract_DAG(Abstract_Page):
                 if get_node_attributes_fct :
                     nodes[root_uid]["attributes"].update(get_node_attributes_fct(root))
                 self.nodes[root_uid]["label"] = self.nodes[root_uid]["label"] + "(%s)" % ( len(self.nodes[root_uid]["attributes"]) -1 )
+
+                if get_node_parameters_fct :
+                    nodes[root_uid].update(get_node_parameters_fct(root))
 
                 for d in get_next_fct(root) :
                     if d is not root :
@@ -324,6 +336,9 @@ class Abstract_DAG(Abstract_Page):
                             else :
                                 self.edges[con]["attributes"] = {}
                             
+                            if get_edge_parameters_fct :
+                                self.edges[con].update(get_edge_parameters_fct(con[0], con[1]))
+
                             _derive(d, nodes, edges, node_labels)
 
         if reset :
@@ -388,7 +403,7 @@ class DagreDAG(Abstract_DAG) :
             return '\n'.join(res)
 
         graph_attributes = "{%s}" % _pseudo_jsonify(self.graph_attributes)
-        # print(graph_attributes)
+        
         template = """
         <script src="../static/libs/d3/js/d3.v4.min.js" charset="utf-8"></script>
         <script src="../static/libs/dagre-d3/js/dagre-d3.js"></script>
