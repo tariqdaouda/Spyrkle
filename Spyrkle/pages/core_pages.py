@@ -142,7 +142,7 @@ class Notes(Abstract_Page):
 
     def get_html(self) :
         html="""
-        <div class="uk-grid-small uk-child-width-1-4@m uk-child-width-1-1@s uk-text-center" uk-grid >
+        <div class="uk-grid uk-child-width-1-3@m uk-child-width-1-1@s uk-text-center" uk-grid >
         {notes}
         </div>
         """.format(notes = "\n".join(self.notes_html))
