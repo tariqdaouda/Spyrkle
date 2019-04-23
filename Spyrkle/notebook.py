@@ -149,7 +149,7 @@ class Notebook(object):
         """Returns an interactive visualization for JuPyter"""
         from IPython.core.display import display, HTML
         # Save reference libraries/output html
-        self.save()
+        self.save(overwrite = True)
         
         # Display the HTML in the Jupyter notebook
         ret = self.get_html(jupyter = True)

@@ -149,3 +149,25 @@ class Notes(Abstract_Page):
 
         return html
 
+class Articles(Abstract_Page):
+    """docstring for Notes"""
+    def __init__(self, notebook, name):
+        super(Articles, self).__init__(notebook, name)
+        self.article_html = []
+
+    def add_article(self, title, abstract, body) :
+        html = """
+            <h1 class="uk-article-title"><a class="uk-link-reset" href="">{title}</a></h1>
+            <p class="uk-text-lead">{abstract}</p>
+            <p> {body} </p>
+        """.format(title = title, abstract = abstract, body = body)
+
+        self.article_html.append(html)
+
+    def get_html(self) :
+        html="""
+        <article class="uk-article">
+        {notes}
+        </article>
+        """.format(notes = "\n".join(self.article_html))
+        return html
