@@ -142,10 +142,32 @@ class Notes(Abstract_Page):
 
     def get_html(self) :
         html="""
-        <div class="uk-grid-small uk-child-width-1-4@m uk-child-width-1-1@s uk-text-center" uk-grid >
+        <div class="uk-grid uk-child-width-1-3@m uk-child-width-1-1@s uk-text-center" uk-grid >
         {notes}
         </div>
         """.format(notes = "\n".join(self.notes_html))
 
         return html
 
+class Articles(Abstract_Page):
+    """docstring for Notes"""
+    def __init__(self, notebook, name):
+        super(Articles, self).__init__(notebook, name)
+        self.article_html = []
+
+    def add_article(self, title, abstract, body) :
+        html = """
+            <h1 class="uk-article-title"><a class="uk-link-reset" href="">{title}</a></h1>
+            <p class="uk-text-lead">{abstract}</p>
+            <p> {body} </p>
+        """.format(title = title, abstract = abstract, body = body)
+
+        self.article_html.append(html)
+
+    def get_html(self) :
+        html="""
+        <article class="uk-article">
+        {notes}
+        </article>
+        """.format(notes = "\n".join(self.article_html))
+        return html
