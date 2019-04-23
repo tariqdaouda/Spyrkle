@@ -155,12 +155,14 @@ class Articles(Abstract_Page):
         super(Articles, self).__init__(notebook, name)
         self.article_html = []
 
-    def add_article(self, title, abstract, body) :
+    def add_article(self, title, abstract, body, image) :
+        im = Image(image)
         html = """
             <h1 class="uk-article-title"><a class="uk-link-reset" href="">{title}</a></h1>
             <p class="uk-text-lead">{abstract}</p>
             <p> {body} </p>
-        """.format(title = title, abstract = abstract, body = body)
+            <img src="{src}"></img>
+        """.format(title = title, abstract = abstract, body = body, src = im.get_src(self.notebook.static_folder))
 
         self.article_html.append(html)
 
@@ -171,3 +173,4 @@ class Articles(Abstract_Page):
         </article>
         """.format(notes = "\n".join(self.article_html))
         return html
+

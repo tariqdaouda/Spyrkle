@@ -1,5 +1,6 @@
 
 from collections import OrderedDict
+import useful as US
 
 class Notebook(object):
     '''Contained within Notebook is the ability to create a new notebook, add pages, save HTML output
@@ -105,10 +106,7 @@ class Notebook(object):
         new_foldername = foldername
         # If overwrite is False and the folder already exists, make a new unique folder
         if not overwrite :
-            i = 1
-            while os.path.exists(new_foldername) :
-                new_foldername = foldername + "_%s" % i
-                i += 1
+            new_foldername = US.get_unique_filename(new_foldername)
 
         # Create paths for static files
         static_folder = os.path.join(new_foldername, self.static_folder)
