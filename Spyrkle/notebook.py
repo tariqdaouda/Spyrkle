@@ -1,6 +1,6 @@
 
 from collections import OrderedDict
-import useful as US
+from . import useful as US
 
 class Notebook(object):
     '''Contained within Notebook is the ability to create a new notebook, add pages, save HTML output
