@@ -1,5 +1,25 @@
 import Spyrkle.useful as US
 
+class Abtract_SaveWrapper(object):
+    """docstring for SaveWrapper"""
+    def __init__(self, obj, filename, save_fuction):
+        super(SaveWrapper, self).__init__()
+        self.obj = obj
+        self.filename = filename
+        self.save_fuction = save_fuction
+    
+    def save(self, folder_filepath) :
+        raise NotImplemented("Should be implemented in child")
+
+class URLSaver(Abtract_SaveWrapper):
+    """docstring for URLSaver"""
+    def __init__(self, url, filename):
+        super(URLSaver, self).__init__(url, filename, urllib.request.urlretrieve)
+    
+    def save(self, folder_filepath):
+        import os
+        self.save_fuction(self.obj, os.path.join(folder_filepath, self.filename))
+        
 class Image(object):
     """docstring for Image"""
     def __init__(self, notebook, url_or_plot, extension=".png"):

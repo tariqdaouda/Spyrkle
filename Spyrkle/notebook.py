@@ -5,7 +5,7 @@ from . import useful as US
 class Notebook(object):
     '''Contained within Notebook is the ability to create a new notebook, add pages, save HTML output
      and render within a jupyter interface'''
-    def __init__(self, name, lib_folder="libs", static_folder="static", figs_folder = "figs"):
+    def __init__(self, name, lib_folder="libs", static_folder="static"):
         super(Notebook, self).__init__()
         import os
         import sys
@@ -16,7 +16,7 @@ class Notebook(object):
         #self.figures = []
         self.lib_folder = lib_folder
         self.static_folder = static_folder
-        self.figs_folder = figs_folder
+        self.registered_folders = {}
         self.dirname = os.path.dirname(inspect.getfile(sys.modules[__name__]))
         self.web_libs_dir = os.path.join(self.dirname, "static/libs")
 
@@ -25,6 +25,12 @@ class Notebook(object):
         '''Adds a page to the notebook'''
         self.pages[page.name] = page
 
+    def register_folder(self, filepath) :
+        self.registered_folders[filepath] = []
+    
+    def add_to_registered_folder(self, filepath, obj) :
+        self.registered_folders[filepath].append(obj)
+    
     # Function to get html of notebook
     def get_html(self, jupyter = False) :
         '''Get the html of notebook'''
@@ -91,17 +97,27 @@ class Notebook(object):
         # Return all of the formated HTML/CSS/js together in correct order
         return '\n'.join((head, body, footer))
 
-    def save(self, folder = ".", figs_temp = "temp_figs", overwrite = False) :
+    def save(self, folder = ".", overwrite = False) :
         '''Saves output HTML, necessary libraries for a notebook into a given directory'''
         import os
         import shutil
 
-        def _create_folder(folder_name):
+        def _create_folder(folder_name, overwrite):
             try:
                 os.mkdir(folder_name)
             except FileExistsError as e:
-               print("Warning: Folder %s already exists" % folder_name)
-        
+                if not overwrite :
+                    print("Warning: Folder %s already exists" % folder_name)
+                else :
+                    shutil.rmtree(folder_name)
+                    os.mkdir(folder_name)
+            return folder_name
+
+        def _populate_folder(folder_fp, objects_fp) :
+            for obj in objects_fp :
+                shutil.copy(objects_fp, folder_fp)
+                # os.remove(os.path.join(temp, obj))
+
         # Create folder name/path based on notebook name
         foldername = os.path.join(folder, self.name.replace(" ", "_").lower())
 
@@ -111,32 +127,44 @@ class Notebook(object):
             new_foldername = US.get_unique_filename(new_foldername)
 
         # Create paths for static files
-        static_folder = os.path.join(new_foldername, self.static_folder)
-        css_folder = os.path.join(new_foldername, self.static_folder, "css")
-        js_folder = os.path.join(new_foldername, self.static_folder, "js")
+        static_folder = os.path.join(self.static_folder)
+        css_folder = os.path.join(self.static_folder, "css")
+        js_folder = os.path.join(self.static_folder, "js")
 
         # Create a path for a library folder, default name of lib_folder is "libs"
-        libs_folder = os.path.join(new_foldername, self.lib_folder)
+        # libs_folder = os.path.join(new_foldername, self.lib_folder)
 
         # Create a figs folder
-        figs_folder = os.path.join(new_foldername, self.figs_folder)
+        # figs_folder = os.path.join(new_foldername, self.figs_folder)
 
         # Create the folders
-        _create_folder( new_foldername )
-        _create_folder( static_folder )
-        _create_folder( css_folder )
-        _create_folder( js_folder )
-        _create_folder( figs_folder )
+        _create_folder( new_foldername, overwrite = False )
+        # _create_folder( static_folder )
+        # _create_folder( css_folder )
+        # _create_folder( js_folder )
+        # _create_folder( figs_folder )
+        self.register_folders(static_folder)
+        self.register_folders(css_folder)
+        self.register_folders(js_folder)
+        self.register_folders(libs_folder)
+
+        for fp in self.registered_folders :
+            full_fp = _create_folder( os.path.join(new_foldername, fp), overwrite = True )
+            for obj in self.registered_folders[fp] :
+                obj.save(full_fp)
+            
+            # _populate_folder(new_foldername, wrapped_objects)
+
         # _create_folder( os.path.join(new_foldername, self.lib_folder) )
 
         # If the libs folder already exists, remove it
-        if os.path.isdir(libs_folder) :
-            shutil.rmtree(libs_folder) 
+        # if os.path.isdir(libs_folder) :
+            # shutil.rmtree(libs_folder) 
 
         # If the figs folder already exists, remove all contents
-        if os.path.isdir(figs_folder) :
-            for fig in os.listdir(figs_folder):
-                os.remove(os.path.join(figs_folder, fig))
+        # if os.path.isdir(figs_folder) :
+            # for fig in os.listdir(figs_folder):
+                # os.remove(os.path.join(figs_folder, fig))
         
         # Copy the library directory to the libs folder
         shutil.copytree(self.web_libs_dir, libs_folder)
@@ -147,13 +175,6 @@ class Notebook(object):
             f = open(fn, "w")
             f.write(page.get_css())
             f.close()
-
-        # Get reference for the temp folder
-        temp = os.path.join(new_foldername, figs_temp)
-        # Copy the figs from temp to figs folder, delete figs from temp folder
-        for fig in os.listdir(temp) :
-            shutil.copy(os.path.join(temp, fig), figs_folder)
-            os.remove(os.path.join(temp, fig))
 
         # Write the HTML page for the notebook
         fn = os.path.join(new_foldername, "index.html")
