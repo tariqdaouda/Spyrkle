@@ -50,4 +50,4 @@ class Image(object):
                 raise ValueError("Unknown image library, supported formats: %s" % str_suppored)
 
         return filename
-        #
+        

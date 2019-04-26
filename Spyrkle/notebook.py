@@ -154,4 +154,4 @@ class Notebook(object):
         # Display the HTML in the Jupyter notebook
         ret = self.get_html(jupyter = True)
         return display(HTML(ret)) 
-        #
+        
