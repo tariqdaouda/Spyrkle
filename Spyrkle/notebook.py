@@ -175,6 +175,3 @@ class Notebook(object):
         # Change path of figures        
         ret = re.sub(r"(.?)(.?)figs(.?)", "/".join([self.name.replace(" ", "_").lower(), "figs", ""]), ret)
         return display(HTML(ret))
-
-    #def register_folder(self) :
-        
