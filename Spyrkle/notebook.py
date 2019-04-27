@@ -5,6 +5,7 @@ from . import useful as US
 class Notebook(object):
     '''Contained within Notebook is the ability to create a new notebook, add pages, save HTML output
      and render within a jupyter interface'''
+
     def __init__(self, name, lib_folder="libs", static_folder="static", figs_folder = "figs"):
         super(Notebook, self).__init__()
         import os
@@ -21,11 +22,11 @@ class Notebook(object):
         self.web_libs_dir = os.path.join(self.dirname, "static/libs")
 
     # Function to add a page to a notebook, takes in something of class "page" which is in core_pages 
-    def add_page(self, page) :
+    def add_page(self, page) : # the page argument here is the object "notes"
         '''Adds a page to the notebook'''
-        self.pages[page.name] = page
+        self.pages[page.name] = page # page.name is notes.name, which calls the name of notes given when notes object was created
 
-    # Function to get html of notebook
+    # Function to get html of notebook, called in save method below
     def get_html(self, jupyter = False) :
         '''Get the html of notebook'''
 
@@ -102,8 +103,9 @@ class Notebook(object):
             except FileExistsError as e:
                print("Warning: Folder %s already exists" % folder_name)
         
-        # Create folder name/path based on notebook name
+        # Create folder name/path based on the path to notebook and the notebook name, join "." with notebook name, given when running notebook.Note("notebook name")
         foldername = os.path.join(folder, self.name.replace(" ", "_").lower())
+
 
         new_foldername = foldername
         # If overwrite is False and the folder already exists, make a new unique folder
@@ -122,6 +124,7 @@ class Notebook(object):
         figs_folder = os.path.join(new_foldername, self.figs_folder)
 
         # Create the folders
+        print(foldername, folder, new_foldername) # for debugging
         _create_folder( new_foldername )
         _create_folder( static_folder )
         _create_folder( css_folder )
@@ -156,9 +159,9 @@ class Notebook(object):
             os.remove(os.path.join(temp, fig))
 
         # Write the HTML page for the notebook
-        fn = os.path.join(new_foldername, "index.html")
-        f = open(fn, "w")
-        f.write(self.get_html())
+        fn = os.path.join(new_foldername, "index.html") # create a file index.html inside folder new_foldername, a name that is given when running notebook.Note("notebook name")
+        f = open(fn, "w") # open index.html
+        f.write(self.get_html()) # run notebook.py's get_html
         f.close()
     
     def view(self):
