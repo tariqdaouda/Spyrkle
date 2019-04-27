@@ -1,29 +1,38 @@
+import Spyrkle.useful as US
+
 class Image(object):
     """docstring for Image"""
-    def __init__(self, url_or_plot, extension=".png"):
+    def __init__(self, notebook, url_or_plot, extension=".png"):
         super(Image, self).__init__()
+        self.name = notebook.name
         self.url_or_plot = url_or_plot
         self.extension = extension
         self.supported_libraries = {
             "savefig": ("seaborn", "matplotlib"),
-            "save": ("altair", "ggplot2")
+            "save": ("altair")
         }
 
-    def get_src(self, save_folder, name=None, *args, **kwargs) :
+    def get_src(self, save_folder = "temp_figs", name=None, *args, **kwargs) :
         import os
         import uuid
+        import shutil
+
+        folder = os.path.join(".", self.name.replace(" ", "_").lower(), save_folder)
+
+        if not os.path.isdir(folder) :
+            os.makedirs(folder)
 
         if name is None :
             new_name = str(uuid.uuid4())
         else :
             new_name = name
 
-        filename = US.get_unique_filename( os.path.join(save_folder, new_name) + self.extension )
+        filename = US.get_unique_filename( os.path.join(folder, new_name) + self.extension )
 
-        if type(name) is str and ( name[:4] == "http" or name[:3] == "ftp" ) :
+        if type(self.url_or_plot) is str and ( self.url_or_plot[:4] == "http" or self.url_or_plot[:3] == "ftp" ) :
             #save an url
             import urllib.request
-            urllib.request.urlretrieve(url, filename)  
+            urllib.request.urlretrieve(self.url_or_plot, filename)  
         else :
             saved = False
             for fct_name in self.supported_libraries :
@@ -92,13 +101,3 @@ class Text(object):
     def get_body(self):
         self.body = self.content["Body"]
         return(self.body)
-
-
-
-
-
-
-
-
-
-

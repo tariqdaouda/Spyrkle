@@ -184,3 +184,32 @@ class Articles(Abstract_Page):
         """.format(notes = "\n".join(self.article_html))
         return html
 
+class Figures(Abstract_Page):
+    """docstring for Figures"""
+    def __init__(self, notebook, name, save_folder = "temp_figs", final_folder = "figs"):
+        import os
+        super(Figures, self).__init__(notebook, name)
+        #self.figure_path = os.path.join(".", notebook.name.replace(" ", "_").lower(), "figs")
+        #self.html_path = os.path.join(".", "figs")
+        self.figure_path = "/".join([".", notebook.name.replace(" ", "_").lower(), save_folder])
+        self.html_path = "/".join([".", final_folder])
+
+        self.files = []
+        # r=root, d=directories, f = files
+        for r, d, f in os.walk(self.figure_path):
+            for file in f:
+                if '.png' in file:
+                    self.files.append(file)
+        self.files = [os.path.join(self.html_path, s) for s in self.files]
+
+    def get_html(self) :
+        fig_html = []
+        for i in self.files:
+            html="""
+            <img src="{img}" alt="" uk-img>
+            """.format(img = i)
+            fig_html.append(html)
+        html_final = """
+        {img}
+        """.format(img = "\n".join(fig_html))
+        return(html_final)
