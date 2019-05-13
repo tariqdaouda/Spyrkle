@@ -32,16 +32,29 @@ class Notebook(object):
         self.registered_folders[filepath].append(obj)
     
     def _create_registered_folders(self, parent_folder) :
+        import os
+        import shutil
+
         for fp, data in self.registered_folders.items() :
-            folder_name = os.path.join(parent_folder, fp)
+            foldername = os.path.join(parent_folder, fp)
             try:
-                os.mkdir(folder_name)
+                os.mkdir(foldername)
             except FileExistsError as e:
                 if not data['flags']['overwrite'] :
-                    print("Warning: Folder %s already exists" % folder_name)
+                    print("Warning: Folder %s already exists" % foldername)
                 else :
-                    shutil.rmtree(folder_name)
-                    os.mkdir(folder_name)
+                    shutil.rmtree(foldername)
+                    os.mkdir(foldername)
+
+    def _folder_tree(self) :
+        tree = []
+        # Take in registered folders
+        for path in self.registered_folders :
+            # Get their "level"
+            
+
+            # Sort then by thier level
+
 
     # Function to get html of notebook
     def get_html(self, jupyter = False) :
@@ -139,11 +152,13 @@ class Notebook(object):
         # figs_folder = os.path.join(new_foldername, self.figs_folder)
 
         # Create the folder
-        self.register_folder(static_folder)
-        self.register_folder(css_folder)
-        self.register_folder(js_folder)
-        self.register_folder(libs_folder, reset=True)
-
+        self.register_folder('', overwrite=False)
+        self.register_folder(static_folder, overwrite=False)
+        self.register_folder(css_folder, overwrite=False)
+        self.register_folder(js_folder, overwrite=False)
+        self.register_folder(libs_folder, overwrite=True)
+        print(self.registered_folders)
+        print(new_foldername)
         self._create_registered_folders(parent_folder = new_foldername)
         
             # for obj in self.registered_folders[fp] :
