@@ -46,15 +46,6 @@ class Notebook(object):
                     shutil.rmtree(foldername)
                     os.mkdir(foldername)
 
-    # def _folder_tree(self) :
-    #     tree = []
-    #     # Take in registered folders
-    #     for path in self.registered_folders :
-    #         # Get their "level"
-            
-
-    #         # Sort then by thier level
-
 
     # Function to get html of notebook
     def get_html(self, jupyter = False) :
@@ -157,31 +148,15 @@ class Notebook(object):
         self.register_folder(css_folder, overwrite=False)
         self.register_folder(js_folder, overwrite=False)
         self.register_folder(libs_folder, overwrite=True)
-        print(self.registered_folders)
-        print(new_foldername)
         self._create_registered_folders(parent_folder = new_foldername)
         
-            # for obj in self.registered_folders[fp] :
-            #     obj.save(full_fp)
-            
-            # _populate_folder(new_foldername, wrapped_objects)
-
-        #_create_folder( os.path.join(new_foldername, self.lib_folder) )
-
-        # # If the libs folder already exists, remove it
-
-
-        # If the figs folder already exists, remove all contents
-        # if os.path.isdir(figs_folder) :
-        #     for fig in os.listdir(figs_folder):
-        #         os.remove(os.path.join(figs_folder, fig))
-        
         # Copy the library directory to the libs folder
-        shutil.copytree(os.path.join(self.web_libs_dir), os.path.join(new_foldername, libs_folder))
+        for libs in os.listdir(os.path.join(self.web_libs_dir)) :
+            shutil.copytree(os.path.join(self.web_libs_dir, libs), os.path.join(new_foldername, libs_folder, libs))
 
         # For every page, write proper css files
         for name, page in self.pages.items() :
-            fn = os.path.join(css_folder, "%s.css" % name)
+            fn = os.path.join(new_foldername, css_folder, "%s.css" % name)
             f = open(fn, "w")
             f.write(page.get_css())
             f.close()
