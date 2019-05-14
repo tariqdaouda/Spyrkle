@@ -35,7 +35,7 @@ class Notebook(object):
         import os
         import shutil
 
-        for fp, data in self.registered_folders.items() :
+        for fp, data in sorted(self.registered_folders.items(), key = lambda file: file[0].count("/")) :
             foldername = os.path.join(parent_folder, fp)
             try:
                 os.mkdir(foldername)
@@ -46,14 +46,14 @@ class Notebook(object):
                     shutil.rmtree(foldername)
                     os.mkdir(foldername)
 
-    def _folder_tree(self) :
-        tree = []
-        # Take in registered folders
-        for path in self.registered_folders :
-            # Get their "level"
+    # def _folder_tree(self) :
+    #     tree = []
+    #     # Take in registered folders
+    #     for path in self.registered_folders :
+    #         # Get their "level"
             
 
-            # Sort then by thier level
+    #         # Sort then by thier level
 
 
     # Function to get html of notebook
