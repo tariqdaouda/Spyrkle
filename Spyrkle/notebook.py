@@ -25,12 +25,28 @@ class Notebook(object):
         '''Adds a page to the notebook'''
         self.pages[page.name] = page
 
-    def register_folder(self, filepath) :
-        self.registered_folders[filepath] = []
-    
+    def register_folder(self, filepath, overwrite) :
+        self.registered_folders[filepath] = {'flags': {'overwrite': True}, 'objects': []}
+
     def add_to_registered_folder(self, filepath, obj) :
         self.registered_folders[filepath].append(obj)
     
+    def _create_registered_folders(self, parent_folder) :
+        import os
+        import shutil
+
+        for fp, data in sorted(self.registered_folders.items(), key = lambda file: file[0].count("/")) :
+            foldername = os.path.join(parent_folder, fp)
+            try:
+                os.mkdir(foldername)
+            except FileExistsError as e:
+                if not data['flags']['overwrite'] :
+                    print("Warning: Folder %s already exists" % foldername)
+                else :
+                    shutil.rmtree(foldername)
+                    os.mkdir(foldername)
+
+
     # Function to get html of notebook
     def get_html(self, jupyter = False) :
         '''Get the html of notebook'''
@@ -102,17 +118,6 @@ class Notebook(object):
         import os
         import shutil
 
-        def _create_folder(folder_name, overwrite):
-            try:
-                os.mkdir(folder_name)
-            except FileExistsError as e:
-                if not overwrite :
-                    print("Warning: Folder %s already exists" % folder_name)
-                else :
-                    shutil.rmtree(folder_name)
-                    os.mkdir(folder_name)
-            return folder_name
-
         def _populate_folder(folder_fp, objects_fp) :
             for obj in objects_fp :
                 shutil.copy(objects_fp, folder_fp)
@@ -132,46 +137,26 @@ class Notebook(object):
         js_folder = os.path.join(self.static_folder, "js")
 
         # Create a path for a library folder, default name of lib_folder is "libs"
-        # libs_folder = os.path.join(new_foldername, self.lib_folder)
+        libs_folder = os.path.join(self.lib_folder)
 
         # Create a figs folder
         # figs_folder = os.path.join(new_foldername, self.figs_folder)
 
-        # Create the folders
-        _create_folder( new_foldername, overwrite = False )
-        # _create_folder( static_folder )
-        # _create_folder( css_folder )
-        # _create_folder( js_folder )
-        # _create_folder( figs_folder )
-        self.register_folders(static_folder)
-        self.register_folders(css_folder)
-        self.register_folders(js_folder)
-        self.register_folders(libs_folder)
-
-        for fp in self.registered_folders :
-            full_fp = _create_folder( os.path.join(new_foldername, fp), overwrite = True )
-            for obj in self.registered_folders[fp] :
-                obj.save(full_fp)
-            
-            # _populate_folder(new_foldername, wrapped_objects)
-
-        # _create_folder( os.path.join(new_foldername, self.lib_folder) )
-
-        # If the libs folder already exists, remove it
-        # if os.path.isdir(libs_folder) :
-            # shutil.rmtree(libs_folder) 
-
-        # If the figs folder already exists, remove all contents
-        # if os.path.isdir(figs_folder) :
-            # for fig in os.listdir(figs_folder):
-                # os.remove(os.path.join(figs_folder, fig))
+        # Create the folder
+        self.register_folder('', overwrite=False)
+        self.register_folder(static_folder, overwrite=False)
+        self.register_folder(css_folder, overwrite=False)
+        self.register_folder(js_folder, overwrite=False)
+        self.register_folder(libs_folder, overwrite=True)
+        self._create_registered_folders(parent_folder = new_foldername)
         
         # Copy the library directory to the libs folder
-        shutil.copytree(self.web_libs_dir, libs_folder)
+        for libs in os.listdir(os.path.join(self.web_libs_dir)) :
+            shutil.copytree(os.path.join(self.web_libs_dir, libs), os.path.join(new_foldername, libs_folder, libs))
 
         # For every page, write proper css files
         for name, page in self.pages.items() :
-            fn = os.path.join(css_folder, "%s.css" % name)
+            fn = os.path.join(new_foldername, css_folder, "%s.css" % name)
             f = open(fn, "w")
             f.write(page.get_css())
             f.close()
@@ -183,6 +168,7 @@ class Notebook(object):
         f.close()
     
     def view(self):
+        print(self.dirname)
         import re
         import os
         """Returns an interactive visualization for JuPyter"""
@@ -195,4 +181,5 @@ class Notebook(object):
 
         # Change path of figures        
         ret = re.sub(r"(.?)(.?)figs(.?)", "/".join([self.name.replace(" ", "_").lower(), "figs", ""]), ret)
+        #print(ret)
         return display(HTML(ret))
