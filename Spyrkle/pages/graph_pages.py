@@ -237,7 +237,8 @@ class DagreGraph(Abstract_Graph) :
             // Center the graph
             let initialScale = 0.75;
             svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
-            svg.attr('height', g.graph().height * initialScale + 400);
+            svg.attr('height', g.graph().height * initialScale);
+            svg.attr('width', g.graph().width * initialScale);
         </script>
         """.format(nodes = _set_nodes(), edges= _set_edges(), graph_attributes=graph_attributes, caption=self.caption, libs=self.notebook.lib_folder)
 
