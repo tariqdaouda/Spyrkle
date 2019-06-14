@@ -189,9 +189,8 @@ class DagreGraph(Abstract_Graph) :
             </div>
         </div>
 
-
         <script id="js">
-            var show_attributes = function(attributes, div_id){{
+            let show_attributes = function(attributes, div_id){{
                 html = `<ul class="uk-list uk-list-striped">`
                 for (const [key, value] of Object.entries( attributes) ) {{
                     html = html + `<li> ${{key}}: ${{value}}</li>`
@@ -203,32 +202,42 @@ class DagreGraph(Abstract_Graph) :
             show_attributes({graph_attributes}, "graph-attributes")
 
             // Create the input graph
-            var g = new dagreD3.graphlib.Graph()
+            let g = new dagreD3.graphlib.Graph()
               .setGraph({{}})
               .setDefaultEdgeLabel(function() {{ return {{}}; }});
 
             {nodes}
             g.nodes().forEach(function(v) {{
-              var node = g.node(v);
+              let node = g.node(v);
               // Round the corners of the nodes
               node.rx = node.ry = 5;
             }});
 
             {edges}
             // Create the renderer
-            var render = new dagreD3.render();
+            let render = new dagreD3.render();
 
             // Set up an SVG group so that we can translate the final graph.
-            var svg = d3.select("svg"),
-                svgGroup = svg.append("g");
+            let svg = d3.select("svg").attr("preserveAspectRatio", "xMinYMin meet")
+            
+            // Set up zoom support
+            let zoom = d3.zoom().on("zoom", function() {{
+                  inner.attr("transform", d3.event.transform);
+                }});
+            svg.call(zoom);
 
+            let svgGroup = svg.append("g");
+
+            let inner = svg.select("g")
             // Run the renderer. This is what draws the final graph.
             render(d3.select("svg g"), g);
 
             svgGroup.selectAll("g.node").on('click', function(name){{ show_attributes(g.node(name)['attributes'], 'node-attributes') }} )
 
             // Center the graph
-            svg.attr("height", g.graph().height + 40);
+            let initialScale = 0.75;
+            svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
+            svg.attr('height', g.graph().height * initialScale + 400);
         </script>
         """.format(nodes = _set_nodes(), edges= _set_edges(), graph_attributes=graph_attributes, caption=self.caption, libs=self.notebook.lib_folder)
 

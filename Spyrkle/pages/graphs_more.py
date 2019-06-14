@@ -23,6 +23,7 @@ class pyTorchCrawler(GraphCrawler):
         return [o.node() for o in node.inputs()]
 
     def get_node_uid(self, node) :
+        # if len(node.scopeName()) == 0 or self.ignore_nodes :
         if self.ignore_nodes :
             return None
         return node.scopeName() + ">(" + "-".join([o.uniqueName() for o in node.outputs()]) + ")"
