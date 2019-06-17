@@ -28,6 +28,9 @@ class GraphCrawler(object):
     def get_edge_attributes():
         return {}
 
+    def get_graph_attributes():
+        return {}
+
 class Abstract_Graph(Abstract_Page):
     """docstring for DAG"""
     def __init__(self, notebook, name):
