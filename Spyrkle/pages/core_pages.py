@@ -1,13 +1,15 @@
+from . import utils
+
 class Abstract_Page(object):
     """docstring for Page"""
-    def __init__(self, notebook, name):
+    def __init__(self, notebook, name): # notebook here is BOOK, an object that represents the main page and is inputted as an argument when creating 'notes' object of type Notes
         super(Abstract_Page, self).__init__()
         self.notebook = notebook
         self.name = name
         self.static_urls = set()
         self.libs_urls = set()
         
-        self.notebook.add_page(self)
+        self.notebook.add_page(self) # run 'BOOK.add_page', a method in object BOOK, create a sub-page under notebook BOOK, putting in itself (object notes) as an argument.
         self.css_rules = {}
         # self.js_scripts = {}
         self.reset_css()
@@ -40,10 +42,10 @@ class Abstract_Page(object):
     def get_html(self) :
         raise NotImplemented("Must be implemented in child")
 
-class Notes(Abstract_Page):
+class Notes(Abstract_Page): # creates an object "notes" of type Notes, notes = pages.Notes(BOOK, "Notes on life"), BOOK is the input for argument notebook
     """docstring for Notes"""
     def __init__(self, notebook, name):
-        super(Notes, self).__init__(notebook, name)
+        super(Notes, self).__init__(notebook, name) # the usage of BOOK object is shown in Abstract_Page
         self.notes_html = []
 
     def add_note_html(self, html, static_urls=[], lib_urls=[]) :
@@ -146,27 +148,35 @@ class Notes(Abstract_Page):
         {notes}
         </div>
         """.format(notes = "\n".join(self.notes_html))
-
         return html
 
 class Articles(Abstract_Page):
     """docstring for Notes"""
     def __init__(self, notebook, name):
         super(Articles, self).__init__(notebook, name)
-        self.article_html = []
+        self.article_html = [] # article_html contains a list of html
 
-    def add_article(self, title, abstract, body, image) :
+    def add_article(self, title, abstract, body) :#, image) :
         im = Image(image)
         html = """
             <h1 class="uk-article-title"><a class="uk-link-reset" href="">{title}</a></h1>
             <p class="uk-text-lead">{abstract}</p>
             <p> {body} </p>
-            <img src="{src}"></img>
-        """.format(title = title, abstract = abstract, body = body, src = im.get_src(self.notebook.static_folder))
+        """.format(title = title, abstract = abstract, body = body)#, src = im.get_src(self.notebook.static_folder))
+        self.article_html.append(html) # each add_ functions append a new html into the _html list.
 
+### Making page from txt file ###
+    def add_from_doc(self, txtfile) :
+        txt = utils.Text(txtfile)
+        txt.set_content()
+        html = """
+            <h1 class="uk-article-title"><a class="uk-link-reset" href="">{title}</a></h1>
+            <p class="uk-text-lead">{abstract}</p>
+            <div> {body} </div>
+        """.format(title = txt.get_title(), abstract = txt.get_abstract(), body = txt.get_body())
         self.article_html.append(html)
 
-    def get_html(self) :
+    def get_html(self) : # function called by 
         html="""
         <article class="uk-article">
         {notes}
