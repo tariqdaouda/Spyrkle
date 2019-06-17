@@ -42,11 +42,13 @@ class pyTorchCrawler(GraphCrawler):
         except KeyError :
             pass
         return base_name
-    
-    def get_node_full_label(self, node) :
-        base_name = "<p>" + node.scopeName().replace("/", "<br>") + "</p>"
-        return base_name
-    
+        
+    def get_node_shape(self, node):
+        import re
+        #hacky but works for now
+        a = re.search(": (.+) =", str(node))
+        return a.group(1)
+
     def get_node_parameters(self, node):
         return {}
 
@@ -54,7 +56,10 @@ class pyTorchCrawler(GraphCrawler):
         return {}
     
     def get_node_attributes(self, node):
-        return {k: node[k] for k in node.attributeNames()}
+        ret = {k: node[k] for k in node.attributeNames()}
+        ret["path"] = "<p>" + node.scopeName().replace("/", "<br>") + "</p>"
+        ret["shape"] = self.get_node_shape(node)
+        return ret
     
     def get_edge_attributes(self, e0, e1):
         return {}
