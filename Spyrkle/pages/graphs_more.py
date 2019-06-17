@@ -1,6 +1,6 @@
-from .graph_pages import GraphCrawler
+from .graph_pages import Abstract_GraphCrawler
 
-class pyTorchCrawler(GraphCrawler):
+class pyTorchCrawler(Abstract_GraphCrawler):
     """
     Custom grpah crawler from building graphs out of pyTorch models.
     
@@ -19,6 +19,7 @@ class pyTorchCrawler(GraphCrawler):
         self.all_nodes = self.torch_graph.nodes()
 
         self.all_nodes = list( self.torch_graph.nodes() )
+        
         super(pyTorchCrawler, self).__init__(roots=self.all_nodes, parents_to_children=False)
         self.model = model
         

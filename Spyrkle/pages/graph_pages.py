@@ -1,46 +1,65 @@
 from .core_pages import Abstract_Page
 
-class GraphCrawler(object):
-    """docstring for GraphCrawler"""
+class Abstract_GraphCrawler(object):
+    """
+    Abstract crawler that all graph crawlers should inherit from
+
+    roots: roots from which to start crawling
+    parents_to_children: If True, search is from parents to children, False means the other way.
+    """
     def __init__(self, roots, parents_to_children=True):
-        super(GraphCrawler, self).__init__()
+        super(Abstract_GraphCrawler, self).__init__()
         self.roots = roots
         self.parents_to_children = parents_to_children
 
     def get_next(self, node) :
+        """return next node"""
         raise NotImplemented("Must be implemented in child")
 
     def get_node_uid(self, node) :
+        """return node unique id"""
         raise NotImplemented("Must be implemented in child")
     
     def get_node_label(self, node) :
+        """return node label"""
         raise NotImplemented("Must be implemented in child")
 
     def get_node_type(self, node):
+        """return node type"""
         return "Just a node"
 
     def get_node_parameters():
+        """return node svg, css, dagre-d3 parameters"""
         return {}
 
     def get_edge_parameters():
+        """return edge svg, css, dagre-d3 parameters"""
         return {}
     
     def get_node_attributes():
+        """return node attributes"""
         return {}
     
     def get_edge_attributes():
+        """return edge attributes"""
         return {}
 
     def get_graph_attributes():
+        """return graph attributes"""
         return {}
 
 class Abstract_Graph(Abstract_Page):
-    """docstring for DAG"""
+    """
+    Abstract representation of a graph page
+    notebook: The notebook this page belongs to
+    name: name of the page
+    """
     def __init__(self, notebook, name):
         super(Abstract_Graph, self).__init__(notebook, name)
         self._init()
 
     def _init(self) :
+        """init the graph"""
         self.caption = ""
         self.nodes, self.edges = {}, {}
         self.node_labels = set()
