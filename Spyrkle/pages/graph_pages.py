@@ -139,24 +139,24 @@ class DagreGraph(Abstract_Graph) :
     def set_attributes(self, dct) :
         self.graph_attributes = dct
 
-    def reset_css(self) :
+    def reset_css(self, empty=False) :
         self.css_rules = {}
-        self.css_rules["text"] = (
-            "font-weight: 300",
-            'font-family: "Helvetica Neue", Helvetica, Arial, sans-serif',
-            'font-size: 14px'
-        )
+        if not empty :
+            self.css_rules["text"] = (
+                'font-family: "Helvetica Neue", Helvetica, Arial, sans-serif',
+                'font-size: 14px'
+            )
 
-        self.css_rules[".node rect"] = (
-            "stroke: #999",
-            'fill: #fff',
-            'stroke-width: 1.5px'
-        )
+            self.css_rules[".node rect"] = (
+                "stroke: #999",
+                'fill: #fff',
+                'stroke-width: 1.5px'
+            )
 
-        self.css_rules[".edgePath path"] = (
-            "stroke: #333",
-            'stroke-width: 1.5px'
-        )    
+            self.css_rules[".edgePath path"] = (
+                "stroke: #333",
+                'stroke-width: 1.5px'
+            )    
 
     def get_html(self) :
         def _pseudo_jsonify(dct) :
