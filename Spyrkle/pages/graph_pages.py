@@ -38,6 +38,7 @@ class Abstract_Graph(Abstract_Page):
         self.caption = ""
         self.nodes, self.edges = {}, {}
         self.node_labels = set()
+        self.graph_attributes = {}
 
     def set_caption(self, caption) :
         self.caption = caption
@@ -110,6 +111,10 @@ class Abstract_Graph(Abstract_Page):
     
         for root in crawler.roots :
             _derive(root, self.nodes, self.edges, self.node_labels)
+
+        self.graph_attributes["nb of nodes"] = len(self.nodes)
+        self.graph_attributes["nb of edges"] = len(self.edges)
+        self.graph_attributes.update( crawler.get_graph_attributes() )
 
 class DagreGraph(Abstract_Graph) :
     """"""

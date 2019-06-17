@@ -22,6 +22,20 @@ class pyTorchCrawler(GraphCrawler):
         self.remove_nameless_scopes = remove_nameless_scopes
         self.onnx_translations = onnx_translations
 
+    def get_graph_prameter_size(self):
+        total_sum = 0
+        for p in self.model.parameters():
+            param_total = 1
+            for size in p.size():
+                param_total *= size
+            total_sum += param_total
+        return total_sum
+
+    def get_graph_attributes(self):
+        return {
+            "nb of parameters": self.get_graph_prameter_size()
+        }
+
     def get_next(self, node) :
         return [o.node() for o in node.inputs()]
 
