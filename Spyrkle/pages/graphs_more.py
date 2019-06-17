@@ -33,7 +33,7 @@ class pyTorchCrawler(GraphCrawler):
 
     def get_graph_attributes(self):
         return {
-            "nb of parameters": self.get_graph_prameter_size()
+            "# parameters": self.get_graph_prameter_size()
         }
 
     def get_next(self, node) :
@@ -49,13 +49,16 @@ class pyTorchCrawler(GraphCrawler):
             return None
         return scopeName + ">(" + "-".join([o.uniqueName() for o in node.outputs()]) + ")"
     
-    def get_node_label(self, node) :
+    def get_node_type(self, node) :
         base_name = node.kind()[6:]
         try :
             base_name = self.onnx_translations[base_name]
         except KeyError :
             pass
-        return base_name + " " + self.get_node_simplified_shape(node)
+        return base_name
+
+    def get_node_label(self, node):
+        return self.get_node_type(node) + " " + self.get_node_simplified_shape(node)
 
     def get_node_simplified_shape(self, node):
         shape = self.get_node_shape(node)

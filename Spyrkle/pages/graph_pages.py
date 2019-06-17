@@ -16,6 +16,9 @@ class GraphCrawler(object):
     def get_node_label(self, node) :
         raise NotImplemented("Must be implemented in child")
 
+    def get_node_type(self, node):
+        return "Just a node"
+
     def get_node_parameters():
         return {}
 
@@ -90,6 +93,7 @@ class Abstract_Graph(Abstract_Page):
 
                 nodes[root_uid]["attributes"].update(crawler.get_node_attributes(root))
                 self.nodes[root_uid]["label"] = self.nodes[root_uid]["label"]# + "(%s)" % ( len(self.nodes[root_uid]["attributes"]) -1 )
+                self.nodes[root_uid]["type"] = crawler.get_node_type(root)
 
                 nodes[root_uid].update(crawler.get_node_parameters(root))
 
@@ -115,9 +119,15 @@ class Abstract_Graph(Abstract_Page):
         for root in crawler.roots :
             _derive(root, self.nodes, self.edges, self.node_labels)
 
-        self.graph_attributes["nb of nodes"] = len(self.nodes)
-        self.graph_attributes["nb of edges"] = len(self.edges)
+        self.graph_attributes["# nodes"] = len(self.nodes)
+        self.graph_attributes["# edges"] = len(self.edges)
         self.graph_attributes.update( crawler.get_graph_attributes() )
+        
+        for n in self.nodes.values():
+            try:
+                self.graph_attributes["# " + n["type"]] += 1
+            except Exception as e:
+                self.graph_attributes["# " + n["type"]] = 1
 
 class DagreGraph(Abstract_Graph) :
     """"""
@@ -187,12 +197,12 @@ class DagreGraph(Abstract_Graph) :
             <svg class="uk-width-expand@s" id="svg-canvas" ></svg>
             <div class="uk-width-1-2@s uk-width-1-4@m uk-container">
                 <div class="uk-card uk-card-default">
-                    <h3 class="uk-card-title uk-margin uk-text-center"> Graph attributes</h3>
-                    <div class="uk-card-body" id="graph-attributes"></div>
-                </div>
-                <div class="uk-card uk-card-default">
                     <h3 class="uk-card-title uk-margin uk-text-center"> Node attributes</h3>
                     <div class="uk-card-body" id="node-attributes"></div>
+                </div>
+                <div class="uk-card uk-card-default">
+                    <h3 class="uk-card-title uk-margin uk-text-center"> Graph attributes</h3>
+                    <div class="uk-card-body" id="graph-attributes"></div>
                 </div>
             </div>
         </div>
