@@ -41,8 +41,15 @@ class pyTorchCrawler(GraphCrawler):
             base_name = self.onnx_translations[base_name]
         except KeyError :
             pass
-        return base_name
-        
+        return base_name + " " + self.get_node_simplified_shape(node)
+
+    def get_node_simplified_shape(self, node):
+        shape = self.get_node_shape(node)
+        if shape.find("Float") == 0 :
+            return shape[5:]
+        else :
+            return shape
+
     def get_node_shape(self, node):
         import re
         #hacky but works for now

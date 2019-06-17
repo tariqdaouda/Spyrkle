@@ -85,7 +85,7 @@ class Abstract_Graph(Abstract_Page):
                 }
 
                 nodes[root_uid]["attributes"].update(crawler.get_node_attributes(root))
-                self.nodes[root_uid]["label"] = self.nodes[root_uid]["label"] + "(%s)" % ( len(self.nodes[root_uid]["attributes"]) -1 )
+                self.nodes[root_uid]["label"] = self.nodes[root_uid]["label"]# + "(%s)" % ( len(self.nodes[root_uid]["attributes"]) -1 )
 
                 nodes[root_uid].update(crawler.get_node_parameters(root))
 
