@@ -48,9 +48,7 @@ class Notebook(object):
                     shutil.rmtree(foldername)
                     os.mkdir(foldername)
 
-
     # Function to get html of notebook
-
     def get_html(self, jupyter = False) :
         '''Get the html of notebook'''
 

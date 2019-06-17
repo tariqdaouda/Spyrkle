@@ -16,6 +16,9 @@ class GraphCrawler(object):
     def get_node_label(self, node) :
         raise NotImplemented("Must be implemented in child")
 
+    def get_node_full_label(self, node) :
+        return self.get_node_label(node)
+
     def get_node_parameters():
         return {}
 
@@ -80,7 +83,8 @@ class Abstract_Graph(Abstract_Page):
                 nodes[root_uid] = {
                     "label": root_name,
                     "attributes": {
-                        "label": root_name
+                        "label": root_name,
+                        "full label": crawler.get_node_full_label(root)
                     }
                 }
 

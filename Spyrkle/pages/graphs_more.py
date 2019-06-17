@@ -3,7 +3,7 @@ from .graph_pages import GraphCrawler
 class pyTorchCrawler(GraphCrawler):
     """docstring for pyTorchCrawler"""
     
-    def __init__(self, model, inputs, ignore_nodes=None, remove_nameless_scopes=True):
+    def __init__(self, model, inputs, ignore_nodes=None, remove_nameless_scopes=True, onnx_translations={"Gemm": "Fully connected"}):
         import torch
         self.trace, out = torch.jit.get_trace_graph(model, inputs)
         torch.onnx._optimize_trace(self.trace, torch.onnx.OperatorExportTypes.ONNX)
@@ -20,6 +20,7 @@ class pyTorchCrawler(GraphCrawler):
             self.ignore_nodes = ignore_nodes
 
         self.remove_nameless_scopes = remove_nameless_scopes
+        self.onnx_translations = onnx_translations
 
     def get_next(self, node) :
         return [o.node() for o in node.inputs()]
@@ -35,10 +36,15 @@ class pyTorchCrawler(GraphCrawler):
         return scopeName + ">(" + "-".join([o.uniqueName() for o in node.outputs()]) + ")"
     
     def get_node_label(self, node) :
-        base_name = node.kind()[6:]#[len(self.model.__class__.__name__)+1:]
-        # print(node.kind(), base_name)
-        if len(base_name) == 0 :
-            base_name = node.kind()[len("onnx::"):]
+        base_name = node.kind()[6:]
+        try :
+            base_name = self.onnx_translations[base_name]
+        except KeyError :
+            pass
+        return base_name
+    
+    def get_node_full_label(self, node) :
+        base_name = "<p>" + node.scopeName().replace("/", "<br>") + "</p>"
         return base_name
     
     def get_node_parameters(self, node):
