@@ -28,23 +28,23 @@ class Abstract_GraphCrawler(object):
         """return node type"""
         return "Just a node"
 
-    def get_node_parameters():
+    def get_node_parameters(self):
         """return node svg, css, dagre-d3 parameters"""
         return {}
 
-    def get_edge_parameters():
+    def get_edge_parameters(self):
         """return edge svg, css, dagre-d3 parameters"""
         return {}
     
-    def get_node_attributes():
+    def get_node_attributes(self):
         """return node attributes"""
         return {}
     
-    def get_edge_attributes():
+    def get_edge_attributes(self):
         """return edge attributes"""
         return {}
 
-    def get_graph_attributes():
+    def get_graph_attributes(self):
         """return graph attributes"""
         return {}
 
