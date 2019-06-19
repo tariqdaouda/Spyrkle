@@ -59,16 +59,18 @@ class Abstract_Graph(Abstract_Page):
         self._init()
 
     def _init(self) :
-        """init the graph"""
+        """initialize the graph"""
         self.caption = ""
         self.nodes, self.edges = {}, {}
         self.node_labels = set()
         self.graph_attributes = {}
 
     def set_caption(self, caption) :
+        """Set the graph caption"""
         self.caption = caption
 
     def force_set(self, nodes, edges) :
+        """Force set graph nodes and edges"""
         self._init()
         for n in self.nodes :
             self.node_labels.add(d)
@@ -77,9 +79,11 @@ class Abstract_Graph(Abstract_Page):
         self.edges = edges
 
     def parse(self, fct, *args, **kwargs) :
+        """Applies function 'fct' tpo *args and ** kwargs to derive the set of nodes and edges"""
         self.nodes, self.edges = fct(*args, **kwargs)
     
     def resolve_node_name(self, base_name, autoinc) :
+        """Rules for changing a node so they stay unique"""
         if not autoinc :
             return base_name
 
@@ -97,7 +101,11 @@ class Abstract_Graph(Abstract_Page):
         autoincrement_names=True,
         reset=False
     ) :
-
+        """
+        Applies crawler to self to derive the graph.
+        Autoincrement: resolve node names by auto-incrementing them
+        reset: if true creates a clean slate before crawling
+        """
         def _derive(root, nodes, edges, node_labels) :
             root_name = self.resolve_node_name(crawler.get_node_label(root), autoincrement_names)
             node_labels.add(root_name)
@@ -149,16 +157,20 @@ class Abstract_Graph(Abstract_Page):
                 self.graph_attributes["# " + n["type"]] = 1
 
 class DagreGraph(Abstract_Graph) :
-    """"""
+    """
+    Use dagre d3 to build arepresentation of the graph
+    """
 
     def __init__(self, notebook, name):
         super(DagreGraph, self).__init__(notebook, name)
         self.graph_attributes = {}
 
     def set_attributes(self, dct) :
+        """Sets grpah attributes. These willl be displayed in the page"""
         self.graph_attributes = dct
 
     def reset_css(self, empty=False) :
+        """Reset the css rules that apply to the graph"""
         self.css_rules = {}
         if not empty :
             self.css_rules["text"] = (
@@ -178,6 +190,7 @@ class DagreGraph(Abstract_Graph) :
             )    
 
     def get_html(self) :
+        """Return the html for the graph page"""
         def _pseudo_jsonify(dct) :
             attrs = [ ]
             for k, v in dct.items() :
