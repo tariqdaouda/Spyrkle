@@ -3,8 +3,18 @@ from collections import OrderedDict
 from . import useful as US
 
 class Notebook(object):
-    '''Contained within Notebook is the ability to create a new notebook, add pages, save HTML output
-     and render within a jupyter interface'''
+    '''
+    Contained within Notebook is the ability to create a new notebook, add pages, save HTML output
+     and render within a jupyter interface
+    
+    name: string, name of the notebook
+    pages: stores pages of the notebook
+    lib_folder: string, name of directory where necessary libraries will be stored
+    static_folder: string, name of directory where static js/css files are stored
+    registered_folders: dict, keys are all necessary filepaths, values are corresponding objects to be stored in filepath
+    dirname: string: filepath where all notebook contents will be stored
+    web_libs_dir: string, filepath for necessary libraries
+     '''
     def __init__(self, name, lib_folder="libs", static_folder="static"):
         super(Notebook, self).__init__()
         import os
@@ -20,18 +30,20 @@ class Notebook(object):
         self.dirname = os.path.dirname(inspect.getfile(sys.modules[__name__]))
         self.web_libs_dir = os.path.join(self.dirname, "static/libs")
 
-    # Function to add a page to a notebook, takes in something of class "page" which is in core_pages 
     def add_page(self, page) :
         '''Adds a page to the notebook'''
         self.pages[page.name] = page
 
     def register_folder(self, filepath, overwrite) :
+        '''Add folder to dict of folders.  Creates new key/value pair'''
         self.registered_folders[filepath] = {'flags': {'overwrite': True}, 'objects': []}
 
     def add_to_registered_folder(self, filepath, obj) :
+        '''Add object to an already registered folder'''
         self.registered_folders[filepath].append(obj)
     
     def _create_registered_folders(self, parent_folder) :
+        '''Create all registered folders in order of their location within the output folder tree '''
         import os
         import shutil
 
@@ -46,10 +58,11 @@ class Notebook(object):
                     shutil.rmtree(foldername)
                     os.mkdir(foldername)
 
-
-    # Function to get html of notebook
     def get_html(self, jupyter = False) :
-        '''Get the html of notebook'''
+        '''
+        returns the html of the output notebook
+        jupyter: boolean, if true, adjusts filepaths for proper output in a jupyter ipython notebook, will be called if "view" is used
+        '''
 
         # Need to change the path pointed to if being rendered in a Jupyter notebook
         if jupyter:
@@ -114,20 +127,22 @@ class Notebook(object):
         return '\n'.join((head, body, footer))
 
     def save(self, folder = ".", overwrite = False) :
-        '''Saves output HTML, necessary libraries for a notebook into a given directory'''
+        '''
+        Saves output HTML, necessary libraries for a notebook into a given directory
+        folder: string, filepath where the notebook should be saved, default is current directory
+        overwrite: boolean, if true, will overwrite already existing notebook files with same name. If false, will create notebook under new name if current notebook name exists
+        '''
         import os
         import shutil
 
         def _populate_folder(folder_fp, objects_fp) :
             for obj in objects_fp :
                 shutil.copy(objects_fp, folder_fp)
-                # os.remove(os.path.join(temp, obj))
 
         # Create folder name/path based on notebook name
         foldername = os.path.join(folder, self.name.replace(" ", "_").lower())
 
         new_foldername = foldername
-        # If overwrite is False and the folder already exists, make a new unique folder
         if not overwrite :
             new_foldername = US.get_unique_filename(new_foldername)
 
@@ -168,10 +183,9 @@ class Notebook(object):
         f.close()
     
     def view(self):
-        print(self.dirname)
+        '''Functionality to view notebook output in an ipython Jupyter notebook'''
         import re
         import os
-        """Returns an interactive visualization for JuPyter"""
         from IPython.core.display import display, HTML
         # Save reference libraries/output html
         self.save(overwrite = True)
@@ -180,6 +194,5 @@ class Notebook(object):
         ret = self.get_html(jupyter = True)
 
         # Change path of figures        
-        ret = re.sub(r"(.?)(.?)figs(.?)", "/".join([self.name.replace(" ", "_").lower(), "figs", ""]), ret)
-        #print(ret)
+        # ret = re.sub(r"(.?)(.?)figs(.?)", "/".join([self.name.replace(" ", "_").lower(), "figs", ""]), ret)
         return display(HTML(ret))

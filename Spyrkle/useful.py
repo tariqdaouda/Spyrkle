@@ -1,5 +1,6 @@
 
 def get_unique_filename(filename):
+    '''Creates a unique filename if tested filename exists'''
     import os
 
     sfilename = filename.split(".")
