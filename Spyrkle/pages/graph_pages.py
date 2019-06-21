@@ -156,6 +156,10 @@ class Abstract_Graph(Abstract_Page):
             except Exception as e:
                 self.graph_attributes["# " + n["type"]] = 1
 
+    def set_attributes(self, dct) :
+        """Sets grpah attributes. These willl be displayed in the page"""
+        self.graph_attributes.update(dct)
+
 class DagreGraph(Abstract_Graph) :
     """
     Use dagre d3 to build arepresentation of the graph
@@ -163,11 +167,6 @@ class DagreGraph(Abstract_Graph) :
 
     def __init__(self, notebook, name):
         super(DagreGraph, self).__init__(notebook, name)
-        self.graph_attributes = {}
-
-    def set_attributes(self, dct) :
-        """Sets grpah attributes. These willl be displayed in the page"""
-        self.graph_attributes.update(dct)
 
     def reset_css(self, empty=False) :
         """Reset the css rules that apply to the graph"""
