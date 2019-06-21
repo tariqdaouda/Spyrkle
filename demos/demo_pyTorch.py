@@ -75,7 +75,7 @@ if __name__ == '__main__':
     #adding somecolors
     dag.set_css_rule(".relu", ("fill: #00ffd0", ) )
 
-    #ass the infos of the optimiser to the graph
+    #add the infos of the optimiser to the graph
     opt_attr = { "SGD-%s" % k : v for k, v in optimizer.state_dict()["param_groups"][0].items() }
     del opt_attr['SGD-params']
     dag.set_attributes(opt_attr)

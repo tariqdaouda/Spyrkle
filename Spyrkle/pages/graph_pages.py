@@ -167,7 +167,7 @@ class DagreGraph(Abstract_Graph) :
 
     def set_attributes(self, dct) :
         """Sets grpah attributes. These willl be displayed in the page"""
-        self.graph_attributes = dct
+        self.graph_attributes.update(dct)
 
     def reset_css(self, empty=False) :
         """Reset the css rules that apply to the graph"""
