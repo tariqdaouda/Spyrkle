@@ -9,24 +9,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-BOOK = notebook.Notebook("Test pyTorch Notebook2")
 
 # Define model
 class TheModelClass(nn.Module):
     def __init__(self):
-        global BOOK
-        notes = pages.Notes(BOOK, "Model")
-        notes.add_note("Description", "This model comes from this page: https://pytorch.org/tutorials/beginner/saving_loading_models.html")
-        notes.add_note(
-            "Code",
-            "These are the first layers",
-            code = """
-                self.conv1 = nn.Conv2d(3, 6, 5)
-                self.pool = nn.MaxPool2d(2, 2)
-                self.conv2 = nn.Conv2d(6, 16, 5)
-            """.replace("                ", "")
-        )
-
         super(TheModelClass, self).__init__()
         self.conv1 = nn.Conv2d(3, 6, 5)
         self.pool = nn.MaxPool2d(2, 2)
@@ -54,6 +40,7 @@ class CustomCrawler(gmore.pyTorchCrawler):
         return {}
 
 if __name__ == '__main__':
+    
     # Initialize model
     model = TheModelClass()
     # Initialize optimizer
@@ -62,9 +49,10 @@ if __name__ == '__main__':
     #pytroch needs inputs to derive the graph
     inputs = torch.FloatTensor( numpy.random.random((6, 3, 32, 32)) )
 
-    # torch_graph = get_graph(model, inputs)
+    BOOK = notebook.Notebook("Test pyTorch Notebook Lean")
+    
     #add a DAG page
-    dag = graphs.DagreGraph(BOOK, "Network")
+    dag = graphs.DagreGraph(BOOK, "ConvNet")
     
     #crawl the DAG and find the structure
     dag.crawl(
@@ -77,19 +65,5 @@ if __name__ == '__main__':
 
     #lets' add a caption
     dag.set_caption("This is a model taken from a pyTorch tutorial. It's a basic conv net")
-
-    #FINISHING WITH SOME NONSENSE
-    notes = pages.Notes(BOOK, "Notes on life")
-    for i in range(10) :
-        notes.add_note("Note %s" % i, "Life is %s Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias dolorum asperiores at veritatis architecto sequi nulla perspiciatis rerum modi, repellat assumenda quisquam dolorem sit molestiae aspernatur cum nemo placeat laboriosam." % i)
-
-    notes = pages.Notes(BOOK, "Notes on life 2")
-    for i in range(10) :
-        notes.add_note("Note %s" % (i+10), "Life is %s Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias dolorum asperiores at veritatis architecto sequi nulla perspiciatis rerum modi, repellat assumenda quisquam dolorem sit molestiae aspernatur cum nemo placeat laboriosam." % i)
-
-    notes = pages.Notes(BOOK, "Notes on life 3")
-    for i in range(10) :
-        notes.add_bullet_points_note("Note %s" % (i+100), ["test", "text", "iop"])
-
 
     BOOK.save(overwrite=True)
