@@ -64,6 +64,9 @@ class Abstract_Graph(Abstract_Page):
         self.nodes, self.edges = {}, {}
         self.node_labels = set()
         self.graph_attributes = {}
+  
+    def add_secondary_attribute(self, name, fields) :
+        self.secondary_attributes[name] = fields
 
     def set_caption(self, caption) :
         """Set the graph caption"""
@@ -162,7 +165,7 @@ class Abstract_Graph(Abstract_Page):
 
 class DagreGraph(Abstract_Graph) :
     """
-    Use dagre d3 to build arepresentation of the graph
+    Use dagre d3 to build a representation of the graph
     """
 
     def __init__(self, notebook, name):
@@ -216,7 +219,7 @@ class DagreGraph(Abstract_Graph) :
             return '\n'.join(res)
 
         graph_attributes = "{%s}" % _pseudo_jsonify(self.graph_attributes)
-        
+
         template = """
         <script src="{libs}/d3/js/d3.v4.min.js" charset="utf-8"></script>
         <script src="{libs}/dagre-d3/js/dagre-d3.js"></script>

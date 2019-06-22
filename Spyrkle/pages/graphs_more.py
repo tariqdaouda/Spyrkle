@@ -6,12 +6,13 @@ class pyTorchCrawler(Abstract_GraphCrawler):
     
     model: The model you want to visualize
     inputs: Example inputs to the model. Should of the right shape.
+    optimizer: If a pyToch optimizer, will add optimizer information as graph attribute
     ignore_nodes: List of node names that should be ignored, ex: relu, Linear, ...
     ignore_empty_scopes: Ignore all the nodes with empty scopes. Simplifies the graph a lot, turn it off for special debugging purposes.
     onnx_translations: Replace the ONNX names for some layers by custom ones
     """
     
-    def __init__(self, model, inputs, ignore_nodes=None, ignore_empty_scopes=True, onnx_translations={"Gemm": "Fully connected"}):
+    def __init__(self, model, inputs, optimizer=None, ignore_nodes=None, ignore_empty_scopes=True, onnx_translations={"Gemm": "Fully connected"}):
         import torch
         self.trace, out = torch.jit.get_trace_graph(model, inputs)
         torch.onnx._optimize_trace(self.trace, torch.onnx.OperatorExportTypes.ONNX)
@@ -22,7 +23,8 @@ class pyTorchCrawler(Abstract_GraphCrawler):
         
         super(pyTorchCrawler, self).__init__(roots=self.all_nodes, parents_to_children=False)
         self.model = model
-        
+        self.optimizer = optimizer
+
         if not ignore_nodes :
             self.ignore_nodes = []
         else :
@@ -41,12 +43,20 @@ class pyTorchCrawler(Abstract_GraphCrawler):
             total_sum += param_total
         return total_sum
 
+    def get_optimizer_info(self):
+        opt_attr = { "%s-%s" % (self.optimizer.__class__.__name__, k) : v for k, v in self.optimizer.state_dict()["param_groups"][0].items() }
+        del opt_attr['%s-params' % self.optimizer.__class__.__name__]
+        return opt_attr
+
     def get_graph_attributes(self):
         """Return a dict representing the attributes of the graph"""
-        return {
+        res = {
             "# parameters": self.get_graph_prameter_size()
         }
-
+        if self.optimizer :
+            res.update(self.get_optimizer_info())
+        return res
+    
     def get_next(self, node) :
         """return the next node"""
         return [o.node() for o in node.inputs()]
