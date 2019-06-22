@@ -69,16 +69,12 @@ if __name__ == '__main__':
     #crawl the DAG and find the structure
     dag.crawl(
         CustomCrawler(model, inputs),
-        autoincrement_names=False
+        autoincrement_names=False,
+        optimizer=optimizer
     )
 
     #adding somecolors
     dag.set_css_rule(".relu", ("fill: #00ffd0", ) )
-
-    #add the infos of the optimiser to the graph
-    opt_attr = { "SGD-%s" % k : v for k, v in optimizer.state_dict()["param_groups"][0].items() }
-    del opt_attr['SGD-params']
-    dag.set_attributes(opt_attr)
 
     #lets' add a caption
     dag.set_caption("This is a model taken from a pyTorch tutorial. It's a basic conv net")
