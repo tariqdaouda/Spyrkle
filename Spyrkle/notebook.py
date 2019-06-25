@@ -16,6 +16,7 @@ class Notebook(object):
     web_libs_dir: string, filepath for necessary libraries
      '''
     def __init__(self, name, lib_folder="libs", static_folder="static"):
+
         super(Notebook, self).__init__()
         import os
         import sys
@@ -32,7 +33,7 @@ class Notebook(object):
 
     def add_page(self, page) :
         '''Adds a page to the notebook'''
-        self.pages[page.name] = page
+        self.pages[page.name] = page # page.name is notes.name, which calls the name of notes given when notes object was created
 
     def register_folder(self, filepath, overwrite) :
         '''Add folder to dict of folders.  Creates new key/value pair'''
@@ -139,8 +140,8 @@ class Notebook(object):
             for obj in objects_fp :
                 shutil.copy(objects_fp, folder_fp)
 
-        # Create folder name/path based on notebook name
         foldername = os.path.join(folder, self.name.replace(" ", "_").lower())
+
 
         new_foldername = foldername
         if not overwrite :
@@ -177,9 +178,9 @@ class Notebook(object):
             f.close()
 
         # Write the HTML page for the notebook
-        fn = os.path.join(new_foldername, "index.html")
-        f = open(fn, "w")
-        f.write(self.get_html())
+        fn = os.path.join(new_foldername, "index.html") # create a file index.html inside folder new_foldername, a name that is given when running notebook.Note("notebook name")
+        f = open(fn, "w") # open index.html
+        f.write(self.get_html()) # run notebook.py's get_html
         f.close()
     
     def view(self):

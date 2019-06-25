@@ -3,13 +3,17 @@ def get_unique_filename(filename):
     '''Creates a unique filename if tested filename exists'''
     import os
 
-    sfilename = filename.split(".")
-    extension = sfilename[-1]
-    basename = '.'.join(sfilename[:-1])
+    def _get_name(basename, extension) :
+        if len(extension) == 0:
+            return basename
+        return basename + "." + extension
+
+    basename, extension = os.path.splitext(filename)
 
     new_basename = basename
     i = 1
-    while os.path.exists( new_basename + "." + extension) :
+    while os.path.exists( _get_name(new_basename, extension)) :
         new_basename = basename + "_%s" % i
         i += 1
-    return new_basename + "." + extension
+
+    return _get_name(new_basename, extension)
