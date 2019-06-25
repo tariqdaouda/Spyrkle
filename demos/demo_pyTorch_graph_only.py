@@ -64,6 +64,6 @@ if __name__ == '__main__':
     dag.set_css_rule(".relu", ("fill: #00ffd0", ) )
 
     #lets' add a caption
-    dag.set_caption("This is a model taken from a pyTorch tutorial. It's a basic conv net")
+    dag.set_caption("This is a model taken from a pyTorch tutorial. It's a basic conv net.")
 
     BOOK.save(overwrite=True)
