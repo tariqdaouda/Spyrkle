@@ -1,8 +1,15 @@
 from . import utils
 
 class Abstract_Page(object):
-    """docstring for Page"""
-    def __init__(self, notebook, name): # notebook here is BOOK, an object that represents the main page and is inputted as an argument when creating 'notes' object of type Notes
+    '''
+    Abstract page that pages will inherit from
+    notebook : corresponding notebook
+    name : string, name of page
+    static_urls : set of urls for static files
+    lib_urls : set of urls for libraries
+    css_rules : dict, containing info about css for a page
+    '''
+    def __init__(self, notebook, name):
         super(Abstract_Page, self).__init__()
         self.notebook = notebook
         self.name = name
@@ -15,24 +22,35 @@ class Abstract_Page(object):
         self.reset_css()
 
     def has_css(self) :
+        '''Indicates if a page has associated css'''
         return len(self.css_rules) > 0
 
     def register_static(self, url) :
+        '''Add url to static url set'''
         self.static_urls.add(url) 
     
     def register_lib(self, url) :
+        '''Add library url to lib set'''
         self.lib_urls.add(url)
 
     def clear_css(self) :
+        '''Clear all css of a page, create empty dict'''
         self.css_rules = {}
 
     def set_css_rule(self, name, lst) :
+        '''
+        Set css for a page
+        name: string, name of a page
+        lst: list of strings defining css
+        '''
         self.css_rules[name] = lst
 
     def reset_css(self) :
+        '''Reset css'''
         pass
 
     def get_css(self) :
+        '''Returns list of css for page'''
         res = []
         for n, rules in self.css_rules.items() :
             str_rules = '; '.join(rules)
@@ -40,15 +58,22 @@ class Abstract_Page(object):
         return '\n'.join(res)
 
     def get_html(self) :
+        '''Gets html for a page'''
         raise NotImplemented("Must be implemented in child")
 
-class Notes(Abstract_Page): # creates an object "notes" of type Notes, notes = pages.Notes(BOOK, "Notes on life"), BOOK is the input for argument notebook
-    """docstring for Notes"""
+class Notes(Abstract_Page):
+    '''
+    Class for notes in the notebook
+    notebook: notebook object
+    name: string, name of the page thatr will contain the notes
+    notes_html: list, html for corresponding notes output 
+    '''
     def __init__(self, notebook, name):
         super(Notes, self).__init__(notebook, name) # the usage of BOOK object is shown in Abstract_Page
         self.notes_html = []
 
     def add_note_html(self, html, static_urls=[], lib_urls=[]) :
+        '''Add html for the notes to the html list, register any necessary folders'''
         self.notes_html.append(html)
         
         for e in static_urls :
@@ -58,7 +83,14 @@ class Notes(Abstract_Page): # creates an object "notes" of type Notes, notes = p
             self.register_static(e)
 
     def add_note(self, title, body, img_src=None, code=None, add_line_reference=True) :
-
+        '''
+        Add a note
+        title: string, title of the note
+        body: string, body of the note
+        img_src: filepath for an image that is associated with a note
+        code: Any code to be included in a note
+        add_line_reference: if True, adds reference to the line of code where note was created in script
+        '''
         if add_line_reference :
             import traceback
             try:
@@ -108,6 +140,13 @@ class Notes(Abstract_Page): # creates an object "notes" of type Notes, notes = p
         self.notes_html.append(html)
 
     def add_bullet_points_note(self, title, points, img_src=None, add_line_reference=True) :
+        '''
+        Adds bullet-point notes to a page
+        title: string, title of the note
+        points: list of strings, each string is list will get a bullet point in a note
+        img_src: filepath for an image that is associated with a note
+        add_line_reference: if True, adds reference to the line of code where note was created in script
+        '''
         
         if add_line_reference :
             import traceback
@@ -151,12 +190,22 @@ class Notes(Abstract_Page): # creates an object "notes" of type Notes, notes = p
         return html
 
 class Articles(Abstract_Page):
-    """docstring for Notes"""
+    '''
+    Used to create articles or long-form messages in a notebook
+    article_html: list, to contain associated article html
+    '''
     def __init__(self, notebook, name):
         super(Articles, self).__init__(notebook, name)
         self.article_html = [] # article_html contains a list of html
 
-    def add_article(self, title, abstract, body) :#, image) :
+    def add_article(self, title, abstract, body, image) :
+        '''
+        Adds article to a notebook
+        title: string, title of the article
+        abstract: string, abstract of an article
+        body: string, body of an article
+        image: any associated image with an article
+        '''
         im = Image(image)
         html = """
             <h1 class="uk-article-title"><a class="uk-link-reset" href="">{title}</a></h1>
@@ -176,7 +225,8 @@ class Articles(Abstract_Page):
         """.format(title = txt.get_title(), abstract = txt.get_abstract(), body = txt.get_body())
         self.article_html.append(html)
 
-    def get_html(self) : # function called by 
+    def get_html(self) :
+        '''Returns uikit-formatted article html'''
         html="""
         <article class="uk-article">
         {notes}
@@ -185,7 +235,7 @@ class Articles(Abstract_Page):
         return html
 
 class Figures(Abstract_Page):
-    """docstring for Figures"""
+    '''In development-support for figures in notebook'''
     def __init__(self, notebook, name, save_folder = "temp_figs", final_folder = "figs"):
         import os
         super(Figures, self).__init__(notebook, name)

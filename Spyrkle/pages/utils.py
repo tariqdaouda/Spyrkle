@@ -1,7 +1,12 @@
 import Spyrkle.useful as US
 
 class Abtract_SaveWrapper(object):
-    """docstring for SaveWrapper"""
+    '''
+    Class to store objects and their associated save information
+    obj: object to be saved
+    filename: name of output file
+    save_function: function necessary to save the object
+    '''
     def __init__(self, obj, filename, save_fuction):
         super(SaveWrapper, self).__init__()
         self.obj = obj
@@ -12,7 +17,11 @@ class Abtract_SaveWrapper(object):
         raise NotImplemented("Should be implemented in child")
 
 class URLSaver(Abtract_SaveWrapper):
-    """docstring for URLSaver"""
+    '''
+    Class specifically to save images/objects from a URL
+    url: url of the source object
+    filename: Name of the file to use when storing locally
+    '''
     def __init__(self, url, filename):
         super(URLSaver, self).__init__(url, filename, urllib.request.urlretrieve)
     
@@ -21,7 +30,14 @@ class URLSaver(Abtract_SaveWrapper):
         self.save_fuction(self.obj, os.path.join(folder_filepath, self.filename))
         
 class Image(object):
-    """docstring for Image"""
+    '''
+    Class for images/figures to be included in the notebook
+    notebook: object of class notebook
+    name : string, name of the notebook
+    url_or_plot : either the url to an image or a python-produced plot
+    extension: file format for output image, default is .png
+    supported_libraries: dict, keys are names of save function, values are associated libraries
+    '''
     def __init__(self, notebook, url_or_plot, extension=".png"):
         super(Image, self).__init__()
         self.name = notebook.name
