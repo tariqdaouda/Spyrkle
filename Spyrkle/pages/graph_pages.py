@@ -1,4 +1,4 @@
-from .core_pages import Abstract_Page
+from ..notebook import Abstract_Section
 
 class Abstract_GraphCrawler(object):
     """
@@ -48,14 +48,13 @@ class Abstract_GraphCrawler(object):
         """return graph attributes"""
         return {}
 
-class Abstract_Graph(Abstract_Page):
+class Abstract_Graph(Abstract_Section):
     """
     Abstract representation of a graph page
-    notebook: The notebook this page belongs to
     name: name of the page
     """
-    def __init__(self, notebook, name):
-        super(Abstract_Graph, self).__init__(notebook, name)
+    def __init__(self, name):
+        super(Abstract_Graph, self).__init__( name)
         self._init()
 
     def _init(self) :
@@ -168,8 +167,8 @@ class DagreGraph(Abstract_Graph) :
     Use dagre d3 to build a representation of the graph
     """
 
-    def __init__(self, notebook, name):
-        super(DagreGraph, self).__init__(notebook, name)
+    def __init__(self, name):
+        super(DagreGraph, self).__init__( name)
 
     def reset_css(self, empty=False) :
         """Reset the css rules that apply to the graph"""
@@ -292,7 +291,7 @@ class DagreGraph(Abstract_Graph) :
             svg.attr('height', g.graph().height * initialScale);
             svg.attr('width', g.graph().width * initialScale);
         </script>
-        """.format(nodes = _set_nodes(), edges= _set_edges(), graph_attributes=graph_attributes, caption=self.caption, libs=self.notebook.lib_folder)
+        """.format(nodes = _set_nodes(), edges= _set_edges(), graph_attributes=graph_attributes, caption=self.caption, libs=self.page.notebook.lib_folder)
 
         return template
 

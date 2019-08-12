@@ -1,69 +1,73 @@
 import Spyrkle.useful as US
 
-class Abtract_SaveWrapper(object):
-    '''
-    Class to store objects and their associated save information
-    obj: object to be saved
-    filename: name of output file
-    save_function: function necessary to save the object
-    '''
-    def __init__(self, obj, filename, save_fuction):
-        super(SaveWrapper, self).__init__()
-        self.obj = obj
-        self.filename = filename
-        self.save_fuction = save_fuction
+# class Abtract_SaveWrapper(object):
+#     '''
+#     Class to store objects and their associated save information
+#     obj: object to be saved
+#     filename: name of output file
+#     save_function: function necessary to save the object
+#     '''
+#     def __init__(self, obj, filename, save_fuction):
+#         super(SaveWrapper, self).__init__()
+#         self.obj = obj
+#         self.filename = filename
+#         self.save_fuction = save_fuction
     
-    def save(self, folder_filepath) :
-        raise NotImplemented("Should be implemented in child")
+#     def save(self, folder_filepath) :
+#         raise NotImplemented("Should be implemented in child")
 
-class URLSaver(Abtract_SaveWrapper):
-    '''
-    Class specifically to save images/objects from a URL
-    url: url of the source object
-    filename: Name of the file to use when storing locally
-    '''
-    def __init__(self, url, filename):
-        super(URLSaver, self).__init__(url, filename, urllib.request.urlretrieve)
+# class URLSaver(Abtract_SaveWrapper):
+#     '''
+#     Class specifically to save images/objects from a URL
+#     url: url of the source object
+#     filename: Name of the file to use when storing locally
+#     '''
+#     def __init__(self, url, filename):
+#         super(URLSaver, self).__init__(url, filename, urllib.request.urlretrieve)
     
-    def save(self, folder_filepath):
-        import os
-        self.save_fuction(self.obj, os.path.join(folder_filepath, self.filename))
+#     def save(self, folder_filepath):
+#         import os
+#         self.save_fuction(self.obj, os.path.join(folder_filepath, self.filename))
         
 class Image(object):
     '''
     Class for images/figures to be included in the notebook
-    notebook: object of class notebook
-    name : string, name of the notebook
     url_or_plot : either the url to an image or a python-produced plot
     extension: file format for output image, default is .png
     supported_libraries: dict, keys are names of save function, values are associated libraries
     '''
-    def __init__(self, notebook, url_or_plot, extension=".png"):
+    def __init__(self, url_or_plot, name=None, extension=".png"):
         super(Image, self).__init__()
-        self.name = notebook.name
+        import uuid
+
+        if name is None:
+            self.name = str(uuid.uuid4())
+        else :
+            self.name = name
+
         self.url_or_plot = url_or_plot
         self.extension = extension
         self.supported_libraries = {
             "savefig": ("seaborn", "matplotlib"),
-            "save": ("altair")
+            "save": ("altair", )
         }
 
-    def get_src(self, save_folder = "temp_figs", name=None, *args, **kwargs) :
+    def get_src(self, save_folder, name=None, *args, **kwargs) :
         import os
         import uuid
         import shutil
 
-        folder = os.path.join(".", self.name.replace(" ", "_").lower(), save_folder)
+        # folder = os.path.join(".", self.name.replace(" ", "_").lower(), save_folder)
 
-        if not os.path.isdir(folder) :
-            os.makedirs(folder)
+        # if not os.path.isdir(folder) :
+            # os.makedirs(folder)
 
         if name is None :
             new_name = str(uuid.uuid4())
         else :
             new_name = name
 
-        filename = US.get_unique_filename( os.path.join(folder, new_name) + self.extension )
+        filename = US.get_unique_filename( os.path.join(save_folder, new_name) + self.extension )
 
         if type(self.url_or_plot) is str and ( self.url_or_plot[:4] == "http" or self.url_or_plot[:3] == "ftp" ) :
             #save an url

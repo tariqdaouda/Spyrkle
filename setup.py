@@ -24,11 +24,10 @@ setup(
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
 
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
     ],
 
-    install_requires=['IPython'],
+    install_requires=['IPython', "mistune"],
 
     keywords='',
 

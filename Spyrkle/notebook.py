@@ -1,6 +1,118 @@
 
 from collections import OrderedDict
 from . import useful as US
+import uuid
+
+class Page(object):
+    """docstring for Page"""
+    def __init__(self, notebook, name):
+        super(Page, self).__init__()
+        self.name = name
+        self.notebook = notebook
+        self.sections = OrderedDict()
+        self.folder = None
+
+    def _set_folder(self, fol):
+        self.folder = fol
+
+    def add_section(self, section):
+        self.sections[section.name] = section
+        section._set_page(self)
+
+    def has_css(self) :
+        '''Indicates if page has associated css'''
+        for sect in self.sections.values():
+             if len(sect.css_rules) > 0 :
+                return True
+        return False
+
+    def get_css(self) :
+        '''Returns list of css for page'''
+        res = []
+        for sect in self.sections.values():
+            res.append( sect.get_css() ) ;
+        return '\n'.join(res)
+
+    def get_html(self) :
+        '''Gets html for page'''
+        res = []
+        for sect in self.sections.values():
+            res.append( sect.get_html() ) ;
+        return '\n'.join(res)
+
+    def __getitem__(self, name):
+        return self.sections[name]
+
+    # def __del__(self, name):
+        # del self.sections[name]
+
+class Abstract_Section(object):
+    '''
+    Abstract section that sections will inherit from
+    name : string, name of section
+    static_urls : set of urls for static files
+    lib_urls : set of urls for libraries
+    css_rules : dict, containing info about css for a section
+    '''
+    def __init__(self, name = None):
+        super(Abstract_Section, self).__init__()
+        # self.notebook = notebook
+        if name is None :
+            self.name = "%s-%s" % (self.__class__.__name__, str(uuid.uuid4()) )
+        else:
+            self.name = name
+
+        self.static_urls = set()
+        self.libs_urls = set()
+        
+        # self.notebook.add_section(self) # run 'BOOK.add_section', a method in object BOOK, create a sub-section under notebook BOOK, putting in itself (object notes) as an argument.
+        self.css_rules = {}
+        # self.js_scripts = {}
+        self.reset_css()
+        self.page = None
+
+    def _set_page(self, page):
+        self.page = page
+
+    def has_css(self) :
+        '''Indicates if a section has associated css'''
+        return len(self.css_rules) > 0
+
+    def register_static(self, url) :
+        '''Add url to static url set'''
+        self.static_urls.add(url) 
+    
+    def register_lib(self, url) :
+        '''Add library url to lib set'''
+        self.lib_urls.add(url)
+
+    def clear_css(self) :
+        '''Clear all css of a section, create empty dict'''
+        self.css_rules = {}
+
+    def set_css_rule(self, name, lst) :
+        '''
+        Set css for a section
+        name: string, name of a section
+        lst: list of strings defining css
+        '''
+        self.css_rules[name] = lst
+
+    def reset_css(self) :
+        '''Reset css'''
+        pass
+
+    def get_css(self) :
+        '''Returns list of css for section'''
+        res = []
+        for n, rules in self.css_rules.items() :
+            str_rules = '; '.join(rules)
+            res.append( "%s {%s} " % (n, str_rules) ) ;
+        return '\n'.join(res)
+
+    def get_html(self) :
+        '''Gets html for a section'''
+        raise NotImplemented("Must be implemented in child")
 
 class Notebook(object):
     '''
@@ -30,10 +142,27 @@ class Notebook(object):
         self.registered_folders = {}
         self.dirname = os.path.dirname(inspect.getfile(sys.modules[__name__]))
         self.web_libs_dir = os.path.join(self.dirname, "static/libs")
+        self.root_foldername = None
 
-    def add_page(self, page) :
+    def remove_self_url_root(self, url):
+        return "." + url[len(self.root_foldername):]
+
+    def new_page(self, name):
+        """create a new page"""
+        page = Page(self, name)
+        self.pages[page.name] = page
+        return page
+
+    def add_page(self, section_or_name) :
         '''Adds a page to the notebook'''
-        self.pages[page.name] = page # page.name is notes.name, which calls the name of notes given when notes object was created
+        if isinstance(section_or_name, Abstract_Section):
+            page = Page(self, section_or_name.name)
+            page.add_section(section_or_name)
+        else :
+            page = Page(self, section_or_name)
+
+        self.pages[page.name] = page
+        return page
 
     def register_folder(self, filepath, overwrite) :
         '''Add folder to dict of folders.  Creates new key/value pair'''
@@ -143,42 +272,52 @@ class Notebook(object):
         foldername = os.path.join(folder, self.name.replace(" ", "_").lower())
 
 
-        new_foldername = foldername
+        self.root_foldername = foldername
         if not overwrite :
-            new_foldername = US.get_unique_filename(new_foldername)
+            self.root_foldername = US.get_unique_filename(self.root_foldername)
 
         # Create paths for static files
         static_folder = os.path.join(self.static_folder)
         css_folder = os.path.join(self.static_folder, "css")
+        img_folder = os.path.join(self.static_folder, "img")
         js_folder = os.path.join(self.static_folder, "js")
+        pages_folder = os.path.join(self.static_folder, "pages")
 
         # Create a path for a library folder, default name of lib_folder is "libs"
         libs_folder = os.path.join(self.lib_folder)
 
         # Create a figs folder
-        # figs_folder = os.path.join(new_foldername, self.figs_folder)
+        # figs_folder = os.path.join(self.root_foldername, self.figs_folder)
 
         # Create the folder
         self.register_folder('', overwrite=False)
         self.register_folder(static_folder, overwrite=False)
         self.register_folder(css_folder, overwrite=False)
+        self.register_folder(img_folder, overwrite=False)
         self.register_folder(js_folder, overwrite=False)
+        self.register_folder(pages_folder, overwrite=True)
         self.register_folder(libs_folder, overwrite=True)
-        self._create_registered_folders(parent_folder = new_foldername)
+
+        for page_name, page in self.pages.items() :
+            page_folder = os.path.join(pages_folder, page_name.replace(" ", "_"))
+            self.register_folder( page_folder, overwrite=True)
+            page._set_folder(os.path.join(self.root_foldername, page_folder))
+
+        self._create_registered_folders(parent_folder = self.root_foldername)
         
         # Copy the library directory to the libs folder
         for libs in os.listdir(os.path.join(self.web_libs_dir)) :
-            shutil.copytree(os.path.join(self.web_libs_dir, libs), os.path.join(new_foldername, libs_folder, libs))
+            shutil.copytree(os.path.join(self.web_libs_dir, libs), os.path.join(self.root_foldername, libs_folder, libs))
 
         # For every page, write proper css files
         for name, page in self.pages.items() :
-            fn = os.path.join(new_foldername, css_folder, "%s.css" % name)
+            fn = os.path.join(self.root_foldername, css_folder, "%s.css" % name)
             f = open(fn, "w")
             f.write(page.get_css())
             f.close()
 
         # Write the HTML page for the notebook
-        fn = os.path.join(new_foldername, "index.html") # create a file index.html inside folder new_foldername, a name that is given when running notebook.Note("notebook name")
+        fn = os.path.join(self.root_foldername, "index.html") # create a file index.html inside folder self.root_foldername, a name that is given when running notebook.Note("notebook name")
         f = open(fn, "w") # open index.html
         f.write(self.get_html()) # run notebook.py's get_html
         f.close()

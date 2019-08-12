@@ -1,75 +1,17 @@
+from collections import OrderedDict
 from . import utils
 
-class Abstract_Page(object):
-    '''
-    Abstract page that pages will inherit from
-    notebook : corresponding notebook
-    name : string, name of page
-    static_urls : set of urls for static files
-    lib_urls : set of urls for libraries
-    css_rules : dict, containing info about css for a page
-    '''
-    def __init__(self, notebook, name):
-        super(Abstract_Page, self).__init__()
-        self.notebook = notebook
-        self.name = name
-        self.static_urls = set()
-        self.libs_urls = set()
-        
-        self.notebook.add_page(self) # run 'BOOK.add_page', a method in object BOOK, create a sub-page under notebook BOOK, putting in itself (object notes) as an argument.
-        self.css_rules = {}
-        # self.js_scripts = {}
-        self.reset_css()
+from ..notebook import Abstract_Section
 
-    def has_css(self) :
-        '''Indicates if a page has associated css'''
-        return len(self.css_rules) > 0
-
-    def register_static(self, url) :
-        '''Add url to static url set'''
-        self.static_urls.add(url) 
-    
-    def register_lib(self, url) :
-        '''Add library url to lib set'''
-        self.lib_urls.add(url)
-
-    def clear_css(self) :
-        '''Clear all css of a page, create empty dict'''
-        self.css_rules = {}
-
-    def set_css_rule(self, name, lst) :
-        '''
-        Set css for a page
-        name: string, name of a page
-        lst: list of strings defining css
-        '''
-        self.css_rules[name] = lst
-
-    def reset_css(self) :
-        '''Reset css'''
-        pass
-
-    def get_css(self) :
-        '''Returns list of css for page'''
-        res = []
-        for n, rules in self.css_rules.items() :
-            str_rules = '; '.join(rules)
-            res.append( "%s {%s} " % (n, str_rules) ) ;
-        return '\n'.join(res)
-
-    def get_html(self) :
-        '''Gets html for a page'''
-        raise NotImplemented("Must be implemented in child")
-
-class Notes(Abstract_Page):
+class Notes(Abstract_Section):
     '''
     Class for notes in the notebook
     notebook: notebook object
-    name: string, name of the page thatr will contain the notes
+    name: string, **kwargs of the section thatr will contain the notes
     notes_html: list, html for corresponding notes output 
     '''
-    def __init__(self, notebook, name):
-        super(Notes, self).__init__(notebook, name) # the usage of BOOK object is shown in Abstract_Page
+    def __init__(self, **kwargs):
+        super(Notes, self).__init__( **kwargs) # the usage of BOOK object is shown in Abstract_Section
         self.notes_html = []
 
     def add_note_html(self, html, static_urls=[], lib_urls=[]) :
@@ -141,7 +83,7 @@ class Notes(Abstract_Page):
 
     def add_bullet_points_note(self, title, points, img_src=None, add_line_reference=True) :
         '''
-        Adds bullet-point notes to a page
+        Adds bullet-point notes to a section
         title: string, title of the note
         points: list of strings, each string is list will get a bullet point in a note
         img_src: filepath for an image that is associated with a note
@@ -189,13 +131,13 @@ class Notes(Abstract_Page):
         """.format(notes = "\n".join(self.notes_html))
         return html
 
-class Articles(Abstract_Page):
+class Articles(Abstract_Section):
     '''
     Used to create articles or long-form messages in a notebook
     article_html: list, to contain associated article html
     '''
-    def __init__(self, notebook, name):
-        super(Articles, self).__init__(notebook, name)
+    def __init__(self, **kwargs):
+        super(Articles, self).__init__( **kwargs)
         self.article_html = [] # article_html contains a list of html
 
     def add_article(self, title, abstract, body, image) :
@@ -214,7 +156,7 @@ class Articles(Abstract_Page):
         """.format(title = title, abstract = abstract, body = body)#, src = im.get_src(self.notebook.static_folder))
         self.article_html.append(html) # each add_ functions append a new html into the _html list.
 
-### Making page from txt file ###
+### Making section from txt file ###
     def add_from_doc(self, txtfile) :
         txt = utils.Text(txtfile)
         txt.set_content()
@@ -234,32 +176,55 @@ class Articles(Abstract_Page):
         """.format(notes = "\n".join(self.article_html))
         return html
 
-class Figures(Abstract_Page):
-    '''In development-support for figures in notebook'''
-    def __init__(self, notebook, name, save_folder = "temp_figs", final_folder = "figs"):
-        import os
-        super(Figures, self).__init__(notebook, name)
-        #self.figure_path = os.path.join(".", notebook.name.replace(" ", "_").lower(), "figs")
-        #self.html_path = os.path.join(".", "figs")
-        self.figure_path = "/".join([".", notebook.name.replace(" ", "_").lower(), save_folder])
-        self.html_path = "/".join([".", final_folder])
+# class Figures(Abstract_Section):
+#     '''In development-support for figures in notebook'''
+#     def __init__(self, **kwargs, save_folder = "temp_figs", final_folder = "figs"):
+#         import os
+#         super(Figures, self).__init__( **kwargs)
+#         #self.figure_path = os.path.join(".", notebook.name.replace(" ", "_").lower(), "figs")
+#         #self.html_path = os.path.join(".", "figs")
+#         self.figure_path = "/".join([".", notebook.name.replace(" ", "_").lower(), save_folder])
+#         self.html_path = "/".join([".", final_folder])
 
-        self.files = []
-        # r=root, d=directories, f = files
-        for r, d, f in os.walk(self.figure_path):
-            for file in f:
-                if '.png' in file:
-                    self.files.append(file)
-        self.files = [os.path.join(self.html_path, s) for s in self.files]
+#         self.files = []
+#         # r=root, d=directories, f = files
+#         for r, d, f in os.walk(self.figure_path):
+#             for file in f:
+#                 if '.png' in file:
+#                     self.files.append(file)
+#         self.files = [os.path.join(self.html_path, s) for s in self.files]
+
+#     def get_html(self) :
+#         fig_html = []
+#         for i in self.files:
+#             html="""
+#             <img src="{img}" alt="" uk-img>
+#             """.format(img = i)
+#             fig_html.append(html)
+#         html_final = """
+#         {img}
+#         """.format(img = "\n".join(fig_html))
+#         return(html_final)
+
+class Image(Abstract_Section):
+    ''''''
+    def __init__(self, url_or_plot, **kwargs):
+        super(Image, self).__init__( **kwargs)
+        self.image = utils.Image(url_or_plot)
 
     def get_html(self) :
-        fig_html = []
-        for i in self.files:
-            html="""
-            <img src="{img}" alt="" uk-img>
-            """.format(img = i)
-            fig_html.append(html)
-        html_final = """
-        {img}
-        """.format(img = "\n".join(fig_html))
-        return(html_final)
+        src = self.page.notebook.remove_self_url_root(self.image.get_src(self.page.folder))
+        html="""
+            <img src="{image}" alt="{name}" uk-img>
+        """.format(image = src, name=self.image.name)
+        return html
+
+class Markdown(Abstract_Section):
+    def __init__(self, text, **kwargs):
+        super(Markdown, self).__init__( **kwargs)
+        self.text = text
+
+    def get_html(self) :
+        '''Returns markdown html'''
+        import mistune
+        return mistune.markdown(self.text)
