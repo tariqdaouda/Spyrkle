@@ -256,7 +256,13 @@ class Notebook(object):
         # Return all of the formated HTML/CSS/js together in correct order
         return '\n'.join((head, body, footer))
 
-    def save(self, folder = ".", overwrite = False) :
+    def save(filename) :
+        """save a pickled version of self"""
+        import pickle
+        with open(filename, "wb") as f :
+            pickle.dump(self, f)
+
+    def export(self, folder = ".", overwrite = False) :
         '''
         Saves output HTML, necessary libraries for a notebook into a given directory
         folder: string, filepath where the notebook should be saved, default is current directory

@@ -1,4 +1,5 @@
 import Spyrkle.useful as US
+from PIL import Image
 
 # class Abtract_SaveWrapper(object):
 #     '''
@@ -29,7 +30,7 @@ import Spyrkle.useful as US
 #         import os
 #         self.save_fuction(self.obj, os.path.join(folder_filepath, self.filename))
         
-class Image(object):
+class Figure(object):
     '''
     Class for images/figures to be included in the notebook
     url_or_plot : either the url to an image or a python-produced plot
@@ -37,8 +38,9 @@ class Image(object):
     supported_libraries: dict, keys are names of save function, values are associated libraries
     '''
     def __init__(self, url_or_plot, name=None, extension=".png"):
-        super(Image, self).__init__()
+        super(Figure, self).__init__()
         import uuid
+        import io
 
         if name is None:
             self.name = str(uuid.uuid4())
@@ -49,35 +51,27 @@ class Image(object):
         self.extension = extension
         self.supported_libraries = {
             "savefig": ("seaborn", "matplotlib"),
-            "save": ("altair", )
+            "save": ("altair", "PIL")
         }
+        
+        self.image = None
+        self.buffer = io.BytesIO()
+        self._save_memory(url_or_plot)
 
-    def get_src(self, save_folder, name=None, *args, **kwargs) :
-        import os
-        import uuid
-        import shutil
-
-        # folder = os.path.join(".", self.name.replace(" ", "_").lower(), save_folder)
-
-        # if not os.path.isdir(folder) :
-            # os.makedirs(folder)
-
-        if name is None :
-            new_name = str(uuid.uuid4())
-        else :
-            new_name = name
-
-        filename = US.get_unique_filename( os.path.join(save_folder, new_name) + self.extension )
+    def _save_memory(self, url_or_plot) :
+        # import shutil
 
         if type(self.url_or_plot) is str and ( self.url_or_plot[:4] == "http" or self.url_or_plot[:3] == "ftp" ) :
             #save an url
             import urllib.request
-            urllib.request.urlretrieve(self.url_or_plot, filename)  
+            # urllib.request.urlretrieve(self.url_or_plot, filename)  
+            urllib.request.urlretrieve(self.url_or_plot, self.buffer)  
         else :
             saved = False
             for fct_name in self.supported_libraries :
                 try:
-                    getattr(self.url_or_plot, fct_name)(filename, *args, **kwargs)
+                    # getattr(self.url_or_plot, fct_name)(filename, *args, **kwargs)
+                    getattr(self.url_or_plot, fct_name)(self.buffer)
                     saved = True
                     break
                 except AttributeError as e:
@@ -89,6 +83,22 @@ class Image(object):
                 str_suppored = ', '.join(str_suppored)
                 raise ValueError("Unknown image library, supported formats: %s" % str_suppored)
 
+        # plt.savefig(buf, format='png')
+        self.buffer.seek(0)
+        self.image = Image.open(self.buffer)
+        # self.buffer.close()
+
+    def get_src(self, save_folder, name=None):
+        import os
+        import uuid
+
+        if name is None :
+            new_name = str(uuid.uuid4())
+        else :
+            new_name = name
+
+        filename = US.get_unique_filename( os.path.join(save_folder, new_name) + self.extension )
+        self.image.save(filename)
         return filename
 
 class Text(object):

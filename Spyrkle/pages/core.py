@@ -1,3 +1,5 @@
+import mistune
+
 from collections import OrderedDict
 from . import utils
 
@@ -14,16 +16,14 @@ class Notes(Abstract_Section):
         super(Notes, self).__init__( **kwargs) # the usage of BOOK object is shown in Abstract_Section
         self.notes_html = []
 
-    def add_note_html(self, html, static_urls=[], lib_urls=[]) :
+    def add_note_html(self, html) :
         '''Add html for the notes to the html list, register any necessary folders'''
         self.notes_html.append(html)
         
-        for e in static_urls :
-            self.register_static(e)
-
-        for e in static_libs :
-            self.register_static(e)
-
+    def add_note_markdown(self, mkd) :
+        '''Add markdown for the notes to the html list, register any necessary folders'''
+        self.add_note_html(mistune.markdown(mkd))
+        
     def add_note(self, title, body, img_src=None, code=None, add_line_reference=True) :
         '''
         Add a note
@@ -148,7 +148,7 @@ class Articles(Abstract_Section):
         body: string, body of an article
         image: any associated image with an article
         '''
-        im = Image(image)
+        im = Figure(image)
         html = """
             <h1 class="uk-article-title"><a class="uk-link-reset" href="">{title}</a></h1>
             <p class="uk-text-lead">{abstract}</p>
@@ -206,17 +206,85 @@ class Articles(Abstract_Section):
 #         """.format(img = "\n".join(fig_html))
 #         return(html_final)
 
-class Image(Abstract_Section):
+class Figure(Abstract_Section):
     ''''''
     def __init__(self, url_or_plot, **kwargs):
-        super(Image, self).__init__( **kwargs)
-        self.image = utils.Image(url_or_plot)
+        super(Figure, self).__init__( **kwargs)
+        self.image = utils.Figure(url_or_plot)
 
     def get_html(self) :
         src = self.page.notebook.remove_self_url_root(self.image.get_src(self.page.folder))
         html="""
             <img src="{image}" alt="{name}" uk-img>
         """.format(image = src, name=self.image.name)
+        return html
+
+class Table(Abstract_Section):
+    def __init__(self, data, header=None, **kwargs):
+        """expects a list of dict for data. Header is provided should be a list of strings"""
+        super(Table, self).__init__( **kwargs)
+        self.header = header
+        self.data = data
+
+    def get_html(self) :
+        '''Returns html'''
+        
+        def _make(header, data):
+            body = []
+            for line in data :
+                res = []
+                for k in header :
+                    try:
+                        res.append( str(line[k]) )                    
+                    except KeyError :
+                        res.append("NA")
+                body.append(res)
+
+            header = "<th>" + "</th>\n<th>".join(header) + "</th>"
+            body = "<tr>" + "</tr>\n<tr>".join(
+                    [ 
+                        "<td>" + "</td>\n<td>".join(line) + "</td>" for line in body
+                    ]
+                ) + "</tr>\n"
+            return header, body
+
+        if self.header is not None :
+            header = self.header
+        else :
+            header = set()
+            for line in self.data :
+                header = header.union( line.keys() )
+            header = list(header)
+
+        header, body = _make(header, self.data)
+       
+        html = """
+        <table class="uk-table uk-table-striped">
+            <thead>
+                {header}
+            </thead>
+            <tbody>
+                {body}
+            </tbody>
+        </table>
+        """.format(header = header, body = body)
+
+        return html
+
+class Caption(Abstract_Section):
+    def __init__(self, mkd_title, mkd_caption, **kwargs):
+        super(Caption, self).__init__( **kwargs)
+        self.title = mistune.markdown(mkd_title)
+        self.caption = mistune.markdown(mkd_caption)
+
+    def get_html(self) :
+        '''Returns markdown html'''
+        html = """
+            <article class="uk-article">
+                <p class="uk-text-lead">{title}</p>
+                <p>{caption}</p>
+            </article>
+        """.format( title = self.title, caption=self.caption)
         return html
 
 class Markdown(Abstract_Section):
@@ -226,5 +294,4 @@ class Markdown(Abstract_Section):
 
     def get_html(self) :
         '''Returns markdown html'''
-        import mistune
         return mistune.markdown(self.text)
