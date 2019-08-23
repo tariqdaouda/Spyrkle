@@ -280,11 +280,12 @@ class Caption(Abstract_Section):
     def get_html(self) :
         '''Returns markdown html'''
         html = """
-            <article class="uk-article">
+            <article class="uk-article-title">
                 <p class="uk-text-lead">{title}</p>
-                <p>{caption}</p>
+                <p class="uk-text-meta">{caption}</p>
             </article>
-        """.format( title = self.title, caption=self.caption)
+        """.format( title = self.title[3:-5], caption=self.caption[3:-5])
+        # print(html)
         return html
 
 class Markdown(Abstract_Section):
