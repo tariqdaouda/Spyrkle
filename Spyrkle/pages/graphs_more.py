@@ -1,4 +1,4 @@
-from .graph_pages import Abstract_GraphCrawler
+from .graph import Abstract_GraphCrawler
 
 class pyTorchCrawler(Abstract_GraphCrawler):
     """

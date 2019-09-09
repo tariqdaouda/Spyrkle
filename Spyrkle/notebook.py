@@ -262,11 +262,14 @@ class Notebook(object):
         with open(filename, "wb") as f :
             pickle.dump(self, f)
 
-    def export(self, folder = ".", overwrite = False) :
+    def export(self, folder = ".", overwrite = False, force_new=False) :
         '''
         Saves output HTML, necessary libraries for a notebook into a given directory
         folder: string, filepath where the notebook should be saved, default is current directory
-        overwrite: boolean, if true, will overwrite already existing notebook files with same name. If false, will create notebook under new name if current notebook name exists
+        overwrite: boolean, if true, will overwrite already existing notebook files with same name
+        on the first export. If false, will create notebook under new name if current notebook name exists.
+        Has no effect for subsequent exports.
+        force_new: boolean for subsequent exports. Will force the creation of a new notebook even if the notebook was previoulsy exported 
         '''
         import os
         import shutil
@@ -277,10 +280,10 @@ class Notebook(object):
 
         foldername = os.path.join(folder, self.name.replace(" ", "_").lower())
 
-
-        self.root_foldername = foldername
-        if not overwrite :
-            self.root_foldername = US.get_unique_filename(self.root_foldername)
+        if not self.root_foldername or force_new:
+            self.root_foldername = foldername
+            if not overwrite :
+                self.root_foldername = US.get_unique_filename(self.root_foldername)
 
         # Create paths for static files
         static_folder = os.path.join(self.static_folder)
