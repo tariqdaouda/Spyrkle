@@ -219,6 +219,26 @@ class Figure(Abstract_Section):
         """.format(image = src, name=self.image.name)
         return html
 
+class HTML(Abstract_Section):
+    ''''''
+    def __init__(self, html, **kwargs):
+        super(HTML, self).__init__( **kwargs)
+        self.html = html
+
+    def get_html(self) :
+        return self.html
+
+class PandasDF(HTML):
+    ''''''
+    def __init__(self, df, **kwargs):
+        super(PandasDF, self).__init__( html=df.to_html(), **kwargs)
+
+class Code(HTML):
+    ''''''
+    def __init__(self, code, **kwargs):
+        html = "<pre class='uk-text-left'>%s</pre>" % code
+        super(Code, self).__init__( html=html, **kwargs)
+
 class Table(Abstract_Section):
     def __init__(self, data, header=None, **kwargs):
         """expects a list of dict for data. Header is provided should be a list of strings"""
@@ -296,3 +316,4 @@ class Markdown(Abstract_Section):
     def get_html(self) :
         '''Returns markdown html'''
         return mistune.markdown(self.text)
+
