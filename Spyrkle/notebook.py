@@ -4,7 +4,7 @@ from . import useful as US
 import uuid
 
 class AnchorNav(object):
-    """docstring for AnchorNav"""
+    """Represent the sticky nav bar on top of a page"""
     def __init__(self, page):
         super(AnchorNav, self).__init__()
         self.page = page
@@ -12,6 +12,7 @@ class AnchorNav(object):
         self.navs=OrderedDict()
 
     def add(self, sect, anchor):
+        """Andd a section to the menu. To create create a dropdown menu use <main-section>.<sub-section> as anchor"""
         unique_key = "%s_%d" % (self.page.name, len(self.sections))
         self.sections[sect] = unique_key
 
@@ -75,7 +76,7 @@ class AnchorNav(object):
         return sect in self.sections
 
 class Page(object):
-    """docstring for Page"""
+    """A spyrkle Page"""
     def __init__(self, notebook, name):
         super(Page, self).__init__()
         self.name = name
@@ -87,7 +88,11 @@ class Page(object):
     def _set_folder(self, fol):
         self.folder = fol
 
-    def add_section(self, section, anchor=None):
+    def add_section(self, section, anchor=None:str):
+        """Add a section to the page.
+        If anchor is not None, it will be added to a sticky nav bar on toop of the page.
+        To create create a dropdown menu use <main-section>.<sub-section> as anchor
+        """
         self.sections[section.name] = section
         if anchor is not None: self.anchors.add(section, anchor)
         section._set_page(self)
