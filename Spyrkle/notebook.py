@@ -88,7 +88,7 @@ class Page(object):
     def _set_folder(self, fol):
         self.folder = fol
 
-    def add_section(self, section, anchor=None:str):
+    def add_section(self, section, anchor:str=None):
         """Add a section to the page.
         If anchor is not None, it will be added to a sticky nav bar on toop of the page.
         To create create a dropdown menu use <main-section>.<sub-section> as anchor

@@ -207,7 +207,7 @@ class Articles(Abstract_Section):
 #         return(html_final)
 
 class Figure(Abstract_Section):
-    ''''''
+    '''Add a figure'''
     def __init__(self, url_or_plot, **kwargs):
         super(Figure, self).__init__( **kwargs)
         self.image = utils.Figure(url_or_plot)
@@ -219,8 +219,34 @@ class Figure(Abstract_Section):
         """.format(image = src, name=self.image.name)
         return html
 
+
+class Heading(Abstract_Section):
+    '''Add a heading'''
+    def __init__(self, text, position="center", line=True, divider=False, bullet=False, size="large", **kwargs):
+        super(Heading, self).__init__( **kwargs)
+        self.text = text
+        self.position = position
+        self.line = line
+        self.divider = divider
+        self.bullet = bullet
+        self.size = size
+
+    def get_html(self) :
+        classes=["uk-margin-large", "uk-text-%s" % self.position, "uk-heading-%s" % self.size]
+        if self.line:
+            classes.append("uk-heading-line")
+
+        if self.divider:
+            classes.append("uk-heading-divider")
+
+        if self.bullet:
+            classes.append("uk-heading-bullet")
+
+        html="""<h1 class="%s"> <span>%s</span> </h1>""" % (" ".join(classes), self.text)
+        return html
+
 class HTML(Abstract_Section):
-    ''''''
+    '''Add an HTML section'''
     def __init__(self, html, **kwargs):
         super(HTML, self).__init__( **kwargs)
         self.html = html
@@ -229,19 +255,19 @@ class HTML(Abstract_Section):
         return self.html
 
 class PandasDF(HTML):
-    ''''''
+    '''Add pandas Dataframe'''
     def __init__(self, df, **kwargs):
         super(PandasDF, self).__init__( html=df.to_html(), **kwargs)
 
 class Code(HTML):
-    ''''''
+    '''Add some code'''
     def __init__(self, code, **kwargs):
         html = "<pre class='uk-text-left'>%s</pre>" % code
         super(Code, self).__init__( html=html, **kwargs)
 
 class Table(Abstract_Section):
     def __init__(self, data, header=None, **kwargs):
-        """expects a list of dict for data. Header is provided should be a list of strings"""
+        """Add a tabe. Expects a list of dict for data. Header is provided should be a list of strings"""
         super(Table, self).__init__( **kwargs)
         self.header = header
         self.data = data
