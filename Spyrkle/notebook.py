@@ -3,6 +3,77 @@ from collections import OrderedDict
 from . import useful as US
 import uuid
 
+class AnchorNav(object):
+    """docstring for AnchorNav"""
+    def __init__(self, page):
+        super(AnchorNav, self).__init__()
+        self.page = page
+        self.sections = {}
+        self.navs=OrderedDict()
+
+    def add(self, sect, anchor):
+        unique_key = "%s_%d" % (self.page.name, len(self.sections))
+        self.sections[sect] = unique_key
+
+        sanchor = anchor.split(".")
+        if len(sanchor) > 2:
+            raise ValueError("Anchor can only have one sub section: %s has %d" % (anchor, len(sanchor)))
+
+        if sanchor[0] not in self.navs:
+            self.navs[sanchor[0]] = {
+                "nav": anchor,
+                "id": unique_key,
+                "subs": []
+            }
+        
+        if len(sanchor) > 1 :
+            nav = {
+                "nav": sanchor[1],
+                "id": unique_key
+            }
+            self.navs[sanchor[0]]["subs"].append(nav)
+  
+    def get_html(self):
+        anchors = []
+        for anch in self.navs.values():
+            if len(anch["subs"]) == 0 :
+                html = '<li><a href="#%s">%s</a></li>' % (anch["id"], anch["nav"])
+            else:
+                subs = ['<li><a href="#%s">%s</a></li>' % (sub_anch["id"], sub_anch["nav"]) for sub_anch in anch["subs"] ]
+                html = """
+                <li>
+                    <a href="#{parent_id}">{parent}</a>
+                    <div class="uk-navbar-dropdown">
+                        <ul class="uk-nav uk-navbar-dropdown-nav">
+                            {items}
+                        </ul>
+                    </div>
+                </li>
+                """.format(parent_id =anch["id"], parent=anch["nav"], items='\n'.join(subs) )
+            anchors.append(html)
+
+        anchor_nav= """
+        <div class="uk-card uk-card-default uk-card-body" style="z-index: 980;" uk-sticky="bottom: #offset">
+            <nav class="uk-navbar-container" uk-navbar>
+                <div class="uk-navbar-left">
+                    <ul class="uk-navbar-nav">
+                        %s
+                    </ul>
+                </div>
+            </nav>
+        </div>
+        """ % '\n'.join(anchors)
+        return anchor_nav
+
+    def is_empty(self):
+        return len(self.sections) == 0
+
+    def __getitem__(self, sect):
+        return self.sections[sect]
+
+    def __contains__(self, sect):
+        return sect in self.sections
+
 class Page(object):
     """docstring for Page"""
     def __init__(self, notebook, name):
@@ -11,12 +82,14 @@ class Page(object):
         self.notebook = notebook
         self.sections = OrderedDict()
         self.folder = None
+        self.anchors = AnchorNav(self)
 
     def _set_folder(self, fol):
         self.folder = fol
 
-    def add_section(self, section):
+    def add_section(self, section, anchor=None):
         self.sections[section.name] = section
+        if anchor is not None: self.anchors.add(section, anchor)
         section._set_page(self)
 
     def has_css(self) :
@@ -37,8 +110,14 @@ class Page(object):
         '''Gets html for page'''
         res = []
         for sect in self.sections.values():
-            res.append( sect.get_html() ) ;
-        return '\n'.join(res)
+            sect_html = sect.get_html()
+            if sect in self.anchors:
+                sect_html = "<div id='%s'>%s</div>" % (self.anchors[sect], sect_html)
+            res.append( sect_html ) ;
+        html =  '\n'.join(res)
+
+        if not self.anchors.is_empty(): html = self.anchors.get_html() + html 
+        return html
 
     def __getitem__(self, name):
         return self.sections[name]
@@ -241,7 +320,6 @@ class Notebook(object):
             <!-- SPYRKLE JS-->
             <script src="{main_dir}/{libs_dir}/spyrkle/js/spyrkle.js"></script>
 
-            
         """.format(pages_css = "\n".join(css_links), libs_dir=self.lib_folder, main_dir = main_dir)
         
         # Define header, page switches, body of pages
