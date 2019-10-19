@@ -124,7 +124,7 @@ class Page(object):
         for sect in self.sections.values():
             sect_html = sect.get_html()
             if sect in self.anchors:
-                sect_html = "<div id='%s'>%s</div>" % (self.anchors[sect], sect_html)
+                sect_html = "<span id='%s'></span>%s" % (self.anchors[sect], sect_html)
             res.append( sect_html ) ;
         html =  '\n'.join(res)
 
