@@ -7,13 +7,14 @@ class AnchorNav(object):
     """Represent the sticky nav bar on top of a page"""
     def __init__(self, page):
         super(AnchorNav, self).__init__()
-        self.page = page
+        # self.page = page
+        self.page_id = page = "top-%s" % page.name
         self.sections = {}
         self.navs=OrderedDict()
 
     def add(self, sect, anchor):
         """Andd a section to the menu. To create create a dropdown menu use <main-section>.<sub-section> as anchor"""
-        unique_key = "%s_%d" % (self.page.name, len(self.sections))
+        unique_key = "%s_%d" % (self.page_id, len(self.sections))
         self.sections[sect] = unique_key
 
         sanchor = anchor.split(".")
@@ -54,16 +55,22 @@ class AnchorNav(object):
             anchors.append(html)
 
         anchor_nav= """
+        <span id={pageid}></span>
         <div class="uk-card uk-card-default uk-card-body" style="z-index: 980;" uk-sticky="bottom: #offset">
             <nav class="uk-navbar-container" uk-navbar>
                 <div class="uk-navbar-left">
                     <ul class="uk-navbar-nav">
-                        %s
+                        {anchors}
+                    </ul>
+                </div>
+                <div class="uk-navbar-right">
+                    <ul class="uk-navbar-nav">
+                        <li><a href="#{pageid}">^Top</a></li>
                     </ul>
                 </div>
             </nav>
         </div>
-        """ % '\n'.join(anchors)
+        """.format( anchors='\n'.join(anchors), pageid=self.page_id)
         return anchor_nav
 
     def is_empty(self):
