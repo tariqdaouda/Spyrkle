@@ -297,10 +297,12 @@ class Table(Abstract_Section):
         if self.header is not None :
             header = self.header
         else :
-            header = set()
-            for line in self.data :
-                header = header.union( line.keys() )
-            header = list(header)
+            header = OrderedDict()
+            for line in self.data:
+                for key in line.keys() :
+                    header[key] = True
+            
+            header = list(header.keys())
 
         header, body = _make(header, self.data)
        
