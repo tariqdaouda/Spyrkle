@@ -63,7 +63,7 @@ class Figure(object):
 
     def is_interactive(self):
         # print(type(self.url_or_plot))
-        return isinstance(self.url_or_plot, hv.Element) or isinstance(self.url_or_plot, hv.core.overlay.Overlay)
+        return isinstance(self.url_or_plot, hv.Element) or isinstance(self.url_or_plot, hv.core.overlay.Overlay) or isinstance(self.url_or_plot, hv.core.overlay.Layout)
 
     def _save_memory(self, url_or_plot) :
         # import shutil
