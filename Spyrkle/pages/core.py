@@ -220,7 +220,7 @@ class Figure(Abstract_Section):
             """.format(image = src, name=self.image.name)
         else :
             html="""
-                <iframe src="{image}" style="height:50%;width:100%;"></iframe>
+                <iframe src="{image}" style="height:75%;width:100%;"></iframe>
             """.format(image = src)
         return html
 
