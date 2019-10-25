@@ -214,10 +214,16 @@ class Figure(Abstract_Section):
 
     def get_html(self) :
         src = self.page.notebook.remove_self_url_root(self.image.get_src(self.page.folder))
-        html="""
-            <img src="{image}" alt="{name}" uk-img>
-        """.format(image = src, name=self.image.name)
+        if not self.image.is_interactive():
+            html="""
+                <img src="{image}" alt="{name}" uk-img>
+            """.format(image = src, name=self.image.name)
+        else :
+            html="""
+                <iframe src="{image}" style="height:50%;width:100%;"></iframe>
+            """.format(image = src)
         return html
+
 
 
 class Heading(Abstract_Section):

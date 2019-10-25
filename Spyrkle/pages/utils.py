@@ -1,5 +1,6 @@
 import Spyrkle.useful as US
 from PIL import Image
+import holoviews as hv
 
 # class Abtract_SaveWrapper(object):
 #     '''
@@ -34,10 +35,10 @@ class Figure(object):
     '''
     Class for images/figures to be included in the notebook
     url_or_plot : either the url to an image or a python-produced plot
-    extension: file format for output image, default is .png
+    default_extension: file format for output image, default is .png
     supported_libraries: dict, keys are names of save function, values are associated libraries
     '''
-    def __init__(self, url_or_plot, name=None, extension=".png"):
+    def __init__(self, url_or_plot, name=None, default_extension=".png"):
         super(Figure, self).__init__()
         import uuid
         import io
@@ -48,15 +49,21 @@ class Figure(object):
             self.name = name
 
         self.url_or_plot = url_or_plot
-        self.extension = extension
+        self.default_extension = default_extension
         self.supported_libraries = {
             "savefig": ("seaborn", "matplotlib"),
             "save": ("altair", "PIL")
         }
         
         self.image = None
-        self.buffer = io.BytesIO()
-        self._save_memory(url_or_plot)
+        self.buffer = None
+        if not self.is_interactive():
+            self.buffer = io.BytesIO()
+            self._save_memory(url_or_plot)
+
+    def is_interactive(self):
+        # print(type(self.url_or_plot))
+        return isinstance(self.url_or_plot, hv.Element)
 
     def _save_memory(self, url_or_plot) :
         # import shutil
@@ -97,8 +104,13 @@ class Figure(object):
         else :
             new_name = name
 
-        filename = US.get_unique_filename( os.path.join(save_folder, new_name) + self.extension )
-        self.image.save(filename)
+        if not self.is_interactive() :
+            filename = US.get_unique_filename( os.path.join(save_folder, new_name) + self.default_extension )
+            self.image.save(filename)
+        else :
+            filename = US.get_unique_filename( os.path.join(save_folder, new_name) + ".html" )
+            hv.save(self.url_or_plot, filename)
+
         return filename
 
 class Text(object):
