@@ -17,7 +17,11 @@ class AnchorNav(object):
         unique_key = "%s_%d" % (self.page_id, len(self.sections))
         self.sections[sect] = unique_key
 
-        sanchor = anchor.split(".")
+        if ">" in anchor:
+            sanchor = anchor.split(">")
+        else:
+            sanchor = anchor.split(".")
+
         if len(sanchor) > 2:
             raise ValueError("Anchor can only have one sub section: %s has %d" % (anchor, len(sanchor)))
 
@@ -98,7 +102,7 @@ class Page(object):
     def add_section(self, section, anchor:str=None):
         """Add a section to the page.
         If anchor is not None, it will be added to a sticky nav bar on toop of the page.
-        To create create a dropdown menu use <main-section>.<sub-section> as anchor
+        To create create a dropdown menu use <main-section>'>'<sub-section> or <main-section>.<sub-section> as anchor
         """
         self.sections[section.name] = section
         if anchor is not None: self.anchors.add(section, anchor)
