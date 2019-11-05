@@ -218,7 +218,7 @@ class Notebook(object):
     dirname: string: filepath where all notebook contents will be stored
     web_libs_dir: string, filepath for necessary libraries
      '''
-    def __init__(self, name, lib_folder="libs", static_folder="static"):
+    def __init__(self, name, lib_folder="libs", static_folder="static", save_folder="."):
 
         super(Notebook, self).__init__()
         import os
@@ -233,10 +233,11 @@ class Notebook(object):
         self.registered_folders = {}
         self.dirname = os.path.dirname(inspect.getfile(sys.modules[__name__]))
         self.web_libs_dir = os.path.join(self.dirname, "static/libs")
-        self.root_foldername = None
+        self.final_save_folder = None
+        self.save_folder = save_folder
 
     def remove_self_url_root(self, url):
-        return "." + url[len(self.root_foldername):]
+        return "." + url[len(self.final_save_folder):]
 
     def new_page(self, name):
         """create a new page"""
@@ -352,10 +353,13 @@ class Notebook(object):
         with open(filename, "wb") as f :
             pickle.dump(self, f)
 
-    def export(self, folder = ".", overwrite = False, force_new=False) :
+    def set_save_folder(self, folder):
+        self.save_folder = folder
+
+    def export(self, save_folder = None, overwrite = False, force_new=False) :
         '''
         Saves output HTML, necessary libraries for a notebook into a given directory
-        folder: string, filepath where the notebook should be saved, default is current directory
+        save_folder: string, filepath where the notebook should be saved, default is current directory
         overwrite: boolean, if true, will overwrite already existing notebook files with same name
         on the first export. If false, will create notebook under new name if current notebook name exists.
         Has no effect for subsequent exports.
@@ -364,16 +368,19 @@ class Notebook(object):
         import os
         import shutil
 
-        def _populate_folder(folder_fp, objects_fp) :
+        def _populate_save_folder(folder_fp, objects_fp) :
             for obj in objects_fp :
                 shutil.copy(objects_fp, folder_fp)
 
-        foldername = os.path.join(folder, self.name.replace(" ", "_").lower())
+        if (self.final_save_folder is None) or (force_new) or ( (save_folder is not None) and (self.save_folder != save_folder) ) :
+            if save_folder is not None :
+                self.save_folder = save_folder
 
-        if not self.root_foldername or force_new:
-            self.root_foldername = foldername
+            self.save_folder = os.path.join(self.save_folder, self.name.replace(" ", "_").lower())
+
+            self.final_save_folder = self.save_folder
             if not overwrite :
-                self.root_foldername = US.get_unique_filename(self.root_foldername)
+                self.final_save_folder = US.get_unique_filename(self.final_save_folder)
 
         # Create paths for static files
         static_folder = os.path.join(self.static_folder)
@@ -386,7 +393,7 @@ class Notebook(object):
         libs_folder = os.path.join(self.lib_folder)
 
         # Create a figs folder
-        # figs_folder = os.path.join(self.root_foldername, self.figs_folder)
+        # figs_folder = os.path.join(self.final_save_folder, self.figs_folder)
 
         # Create the folder
         self.register_folder('', overwrite=False)
@@ -400,23 +407,23 @@ class Notebook(object):
         for page_name, page in self.pages.items() :
             page_folder = os.path.join(pages_folder, page_name.replace(" ", "_"))
             self.register_folder( page_folder, overwrite=True)
-            page._set_folder(os.path.join(self.root_foldername, page_folder))
+            page._set_folder(os.path.join(self.final_save_folder, page_folder))
 
-        self._create_registered_folders(parent_folder = self.root_foldername)
+        self._create_registered_folders(parent_folder = self.final_save_folder)
         
         # Copy the library directory to the libs folder
         for libs in os.listdir(os.path.join(self.web_libs_dir)) :
-            shutil.copytree(os.path.join(self.web_libs_dir, libs), os.path.join(self.root_foldername, libs_folder, libs))
+            shutil.copytree(os.path.join(self.web_libs_dir, libs), os.path.join(self.final_save_folder, libs_folder, libs))
 
         # For every page, write proper css files
         for name, page in self.pages.items() :
-            fn = os.path.join(self.root_foldername, css_folder, "%s.css" % name)
+            fn = os.path.join(self.final_save_folder, css_folder, "%s.css" % name)
             f = open(fn, "w")
             f.write(page.get_css())
             f.close()
 
         # Write the HTML page for the notebook
-        fn = os.path.join(self.root_foldername, "index.html") # create a file index.html inside folder self.root_foldername, a name that is given when running notebook.Note("notebook name")
+        fn = os.path.join(self.final_save_folder, "index.html") # create a file index.html inside folder self.final_save_folder, a name that is given when running notebook.Note("notebook name")
         f = open(fn, "w") # open index.html
         f.write(self.get_html()) # run notebook.py's get_html
         f.close()
