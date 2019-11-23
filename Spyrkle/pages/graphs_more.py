@@ -81,6 +81,10 @@ class pyTorchCrawler(Abstract_GraphCrawler):
             base_name = self.onnx_translations[base_name]
         except KeyError :
             pass
+
+        if base_name.lower() == "pythonop":
+            base_name = node.pyname()
+        
         return base_name
 
     def get_node_label(self, node):
