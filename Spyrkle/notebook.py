@@ -56,7 +56,7 @@ class AnchorNav(object):
 
         anchor_nav= """
         <span id={pageid}></span>
-        <div class="uk-card uk-card-default uk-card-body" style="z-index: 980;" uk-sticky="bottom: #offset">
+        <div class="uk-card uk-card-default uk-card-body" style="z-index: 980;" uk-sticky="offset: 100">
             <nav class="uk-navbar-container" uk-navbar>
                 <div class="uk-navbar-left">
                     <ul class="uk-navbar-nav">

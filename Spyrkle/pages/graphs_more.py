@@ -12,7 +12,7 @@ class pyTorchCrawler(Abstract_GraphCrawler):
     onnx_translations: Replace the ONNX names for some layers by custom ones
     """
     
-    def __init__(self, model, inputs, optimizer=None, ignore_nodes=None, ignore_empty_scopes=True, onnx_translations={"Gemm": "Fully connected"}):
+    def __init__(self, model, inputs, optimizer=None, ignore_nodes=None, ignore_empty_scopes=False, ignore_params=True, onnx_translations={"Gemm": "Fully connected"}):
         import torch
         self.trace, out = torch.jit.get_trace_graph(model, inputs)
         torch.onnx._optimize_trace(self.trace, torch.onnx.OperatorExportTypes.ONNX)
@@ -31,6 +31,7 @@ class pyTorchCrawler(Abstract_GraphCrawler):
             self.ignore_nodes = ignore_nodes
 
         self.ignore_empty_scopes = ignore_empty_scopes
+        self.ignore_params = ignore_params
         self.onnx_translations = onnx_translations
 
     def get_graph_prameter_size(self):
@@ -69,7 +70,7 @@ class pyTorchCrawler(Abstract_GraphCrawler):
     def get_node_uid(self, node) :
         """return a nodes unique id"""
         scopeName = node.scopeName()
-        if (self.ignore_empty_scopes and len(scopeName) == 0) or (self._should_ignore(scopeName) ) :
+        if (self.ignore_empty_scopes and len(scopeName) == 0) or (self.ignore_params and self.get_node_type(node).lower() == "param") or (self._should_ignore(scopeName) ) :
             return None
         return scopeName + ">(" + "-".join([o.uniqueName() for o in node.outputs()]) + ")"
     
