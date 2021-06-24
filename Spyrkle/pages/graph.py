@@ -192,6 +192,8 @@ class DagreGraph(Abstract_Graph) :
 
     def get_html(self) :
         """Return the html for the graph page"""
+        # print("self.nodes", self.nodes)
+        # print("self.edges", self.edges)
         def _pseudo_jsonify(dct) :
             attrs = [ ]
             for k, v in dct.items() :

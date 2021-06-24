@@ -339,13 +339,13 @@ class Notebook(object):
         header="<h1 class='uk-header-primary uk-margin uk-text-center'>{name}</h1>".format(name=self.name)
         switcher='<div class="uk-button-group uk-margin">{menu}</div>'.format(menu=''.join(switch_menu)) 
         switcher_html='<div class="uk-container">{data}</div>'.format(data=''.join(switch_html)) 
-        body = """{js}<body onload="toggle_page('page-0')" class='uk-container'>{header}\n{switcher}\n{switcher_html}\n</body>""".format(header=header, switcher=switcher, switcher_html=switcher_html, js=js)
+        body = """<body onload="toggle_page('page-0')" class='uk-container'>{js}{header}\n{switcher}\n{switcher_html}\n</body>""".format(header=header, switcher=switcher, switcher_html=switcher_html, js=js)
         
         # Add a footer with a small note about the application    
         footer = "<footer class='uk-text-meta uk-text-center uk-margin'><p class='uk-text-meta'>Generetad by Spyrkle, static documentation for your glorious pythonic work</p></footer>"
         
         # Return all of the formated HTML/CSS/js together in correct order
-        return '\n'.join((head, body, footer))
+        return "<html>" + '\n'.join((head, body, footer)) + "</html>"
 
     def save(filename) :
         """save a pickled version of self"""
