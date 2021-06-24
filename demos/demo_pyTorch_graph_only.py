@@ -43,27 +43,33 @@ if __name__ == '__main__':
     
     # Initialize model
     model = TheModelClass()
-    # Initialize optimizer
+    
+    # Initialize the dummy optimizer
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
     #pytroch needs inputs to derive the graph
     inputs = torch.FloatTensor( numpy.random.random((6, 3, 32, 32)) )
 
     BOOK = notebook.Notebook("Test pyTorch Notebook Lean")
-    
+    page = BOOK.add_page("Model Graph")
+
     #add a DAG page
-    dag = graphs.DagreGraph(BOOK, "ConvNet")
+    dag = graphs.DagreGraph(BOOK)
     
     #crawl the DAG and find the structure
     dag.crawl(
         CustomCrawler(model, inputs, optimizer=optimizer),
         autoincrement_names=False,
+        ignore_nodes=["Constant", "::t"],
+        strict_ignore=False,
+        ignore_params=True
     )
 
     #adding somecolors
     dag.set_css_rule(".relu", ("fill: #00ffd0", ) )
 
-    #lets' add a caption
+    #let's add a caption
     dag.set_caption("This is a model taken from a pyTorch tutorial. It's a basic conv net.")
-
-    BOOK.save(overwrite=True)
+    page.add_section(dag)
+    
+    BOOK.export(overwrite=True)
