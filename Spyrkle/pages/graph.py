@@ -257,7 +257,7 @@ class DagreGraph(Abstract_Graph) :
                 $('#'+div_id).html(html)
             }}
 
-            show_attributes{unique}({graph_attributes}, "graph-attributes")
+            show_attributes{unique}({graph_attributes}, "graph-attributes{unique}")
 
             // Create the input graph
             let graph{unique} = new dagreD3.graphlib.Graph()
