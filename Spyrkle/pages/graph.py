@@ -13,7 +13,7 @@ class Abstract_GraphCrawler(object):
         self.parents_to_children = parents_to_children
 
     def get_next(self, node) :
-        """return next node"""
+        """return next nodes"""
         raise NotImplemented("Must be implemented in child")
 
     def get_node_uid(self, node) :

@@ -65,7 +65,7 @@ class pyTorchCrawler(Abstract_GraphCrawler):
         return res
     
     def get_next(self, node) :
-        """return the next node"""
+        """return the next nodes"""
         return [o.node() for o in node.inputs()]
 
     def _should_ignore(self, kind) :
