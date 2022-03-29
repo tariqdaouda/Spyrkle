@@ -128,7 +128,7 @@ class pyTorchCrawler(Abstract_GraphCrawler):
         """return node svg, css, dagre-d3 parameters"""
         return {}
 
-    def get_edge_parameters(self, e0, e1):
+    def get_edge_parameters(self, from_node, to_node):
         """return edge svg, css, dagre-d3 parameters"""
         return {}
     
@@ -139,6 +139,6 @@ class pyTorchCrawler(Abstract_GraphCrawler):
         ret["shape"] = self.get_node_shape(node)
         return ret
     
-    def get_edge_attributes(self, e0, e1):
+    def get_edge_attributes(self, from_node, to_node):
         """return edge custom attributes"""
         return {}

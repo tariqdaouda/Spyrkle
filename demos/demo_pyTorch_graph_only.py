@@ -1,6 +1,6 @@
 import Spyrkle.notebook as notebook
-import Spyrkle.pages.core_pages as pages
-import Spyrkle.pages.graph_pages as graphs
+import Spyrkle.pages.core as pages
+import Spyrkle.pages.graph as graphs
 import Spyrkle.pages.graphs_more as gmore
 
 import numpy
