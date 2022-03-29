@@ -194,6 +194,8 @@ class DagreGraph(Abstract_Graph) :
         """Return the html for the graph page"""
         # print("self.nodes", self.nodes)
         # print("self.edges", self.edges)
+        import uuid
+
         def _pseudo_jsonify(dct) :
             attrs = [ ]
             for k, v in dct.items() :
@@ -209,17 +211,20 @@ class DagreGraph(Abstract_Graph) :
             res = []
             for node_id, params in self.nodes.items() :
                 attrs = _pseudo_jsonify(params)
-                res.append( "g.setNode('{node_id}', {{ {attributes} }} );".format(node_id = node_id, attributes = attrs ))
+                res.append( "graph{unique}.setNode('{node_id}', {{ {attributes} }} );".format(node_id = node_id, attributes = attrs, unique=graph_name ))
             
             return '\n'.join(res)
 
         def _set_edges() :
             res = []
             for n1, n2 in self.edges :
-                res.append( "g.setEdge('%s', '%s')" % (n1, n2) ) ;
+                res.append( "graph{unique}.setEdge('{n1}', '{n2}')".format(unique=graph_name, n1=n1, n2=n2) ) ;
             return '\n'.join(res)
 
         graph_attributes = "{%s}" % _pseudo_jsonify(self.graph_attributes)
+
+        uuid = str(uuid.uuid4())[:3].replace("-", "")
+        graph_name="theGraph" + uuid
 
         template = """
         <script src="{libs}/d3/js/d3.v4.min.js" charset="utf-8"></script>
@@ -229,21 +234,21 @@ class DagreGraph(Abstract_Graph) :
             {caption}
         </div>
         <div class="uk-grid">
-            <svg class="uk-width-expand@s" id="svg-canvas" ></svg>
+            <svg class="uk-width-expand@s" id="svgcanvas{unique}" ></svg>
             <div class="uk-width-1-2@s uk-width-1-4@m uk-container">
                 <div class="uk-card uk-card-default">
                     <h3 class="uk-card-title uk-margin uk-text-center"> Node attributes</h3>
-                    <div class="uk-card-body" id="node-attributes"></div>
+                    <div class="uk-card-body" id="node-attributes{unique}"></div>
                 </div>
                 <div class="uk-card uk-card-default">
                     <h3 class="uk-card-title uk-margin uk-text-center"> Graph attributes</h3>
-                    <div class="uk-card-body" id="graph-attributes"></div>
+                    <div class="uk-card-body" id="graph-attributes{unique}"></div>
                 </div>
             </div>
         </div>
 
-        <script id="js">
-            let show_attributes = function(attributes, div_id){{
+        <script id="js{unique}">
+            let show_attributes{unique} = function(attributes, div_id){{
                 html = `<ul class="uk-list uk-list-striped">`
                 for (const [key, value] of Object.entries( attributes) ) {{
                     html = html + `<li> ${{key}}: ${{value}}</li>`
@@ -252,48 +257,48 @@ class DagreGraph(Abstract_Graph) :
                 $('#'+div_id).html(html)
             }}
 
-            show_attributes({graph_attributes}, "graph-attributes")
+            show_attributes{unique}({graph_attributes}, "graph-attributes")
 
             // Create the input graph
-            let g = new dagreD3.graphlib.Graph()
+            let graph{unique} = new dagreD3.graphlib.Graph()
               .setGraph({{}})
               .setDefaultEdgeLabel(function() {{ return {{}}; }});
 
             {nodes}
-            g.nodes().forEach(function(v) {{
-              let node = g.node(v);
+            graph{unique}.nodes().forEach(function(v) {{
+              let node{unique} = graph{unique}.node(v);
               // Round the corners of the nodes
-              node.rx = node.ry = 5;
+              node{unique}.rx = node{unique}.ry = 5;
             }});
 
             {edges}
             // Create the renderer
-            let render = new dagreD3.render();
+            let render{unique} = new dagreD3.render();
 
-            // Set up an SVG group so that we can translate the final graph.
-            let svg = d3.select("svg").attr("preserveAspectRatio", "xMinYMin meet")
+            // Set up an SVG group svgso that we can translate the final graph.
+            let svg{unique} = d3.select("#svgcanvas{unique}").attr("preserveAspectRatio", "xMinYMin meet")
             
             // Set up zoom support
-            let zoom = d3.zoom().on("zoom", function() {{
-                  inner.attr("transform", d3.event.transform);
+            let zoom{unique} = d3.zoom().on("zoom", function() {{
+                  inner{unique}.attr("transform", d3.event.transform);
                 }});
-            svg.call(zoom);
+            svg{unique}.call(zoom{unique});
 
-            let svgGroup = svg.append("g");
+            let svgGroup{unique} = svg{unique}.append("g");
 
-            let inner = svg.select("g")
+            let inner{unique} = svg{unique}.select("g")
             // Run the renderer. This is what draws the final graph.
-            render(d3.select("svg g"), g);
+            render{unique}(d3.select("#svgcanvas{unique} g"), graph{unique});
 
-            svgGroup.selectAll("g.node").on('click', function(name){{ show_attributes(g.node(name)['attributes'], 'node-attributes') }} )
+            svgGroup{unique}.selectAll("graph{unique}.node").on('click', function(name){{ show_attributes(graph{unique}.node(name)['attributes'], 'node-attributes') }} )
 
             // Center the graph
-            let initialScale = 0.75;
-            svg.call(zoom.transform, d3.zoomIdentity.translate((svg.attr("width") - g.graph().width * initialScale) / 2, 20).scale(initialScale));
-            svg.attr('height', g.graph().height * initialScale);
-            svg.attr('width', g.graph().width * initialScale);
+            let initialScale{unique} = 0.75;
+            svg{unique}.call(zoom{unique}.transform, d3.zoomIdentity.translate((svg{unique}.attr("width") - graph{unique}.graph().width * initialScale{unique}) / 2, 20).scale(initialScale{unique}));
+            svg{unique}.attr('height', graph{unique}.graph().height * initialScale{unique});
+            svg{unique}.attr('width', graph{unique}.graph().width * initialScale{unique});
         </script>
-        """.format(nodes = _set_nodes(), edges= _set_edges(), graph_attributes=graph_attributes, caption=self.caption, libs=self.page.notebook.lib_folder)
+        """.format(nodes = _set_nodes(), edges= _set_edges(), graph_attributes=graph_attributes, caption=self.caption, libs=self.page.notebook.lib_folder, unique=graph_name)
 
         return template
 
